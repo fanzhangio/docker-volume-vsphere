@@ -34,7 +34,7 @@ import auth
 import auth_data_const
 import convert
 import auth_data
-import auth
+import auth_api
 
 NOT_AVAILABLE = 'N/A'
 
@@ -830,23 +830,20 @@ def generate_tuple_from_vm_list(vm_list):
 
 def tenant_create(args):
     """ Handle tenant create command """
-    error_info, vms = generate_tuple_from_vm_list(args.vm_list)
-    if error_info:
-        return operation_fail(error_info)
-
     name = args.name
-    description = ""
-    default_datastore ="default_ds"
+    vm_list = args.vm_list 
+    description = "" 
+    default_datastore ="default_ds" 
     default_privileges =  {}
     privileges = []
-
-    error_info, tenant = create_tenant_in_db(
-                                             name = name,
-                                             description = description,
-                                             default_datastore = default_datastore,
-                                             default_privileges = default_privileges,
-                                             vms = vms,
-                                             privileges = privileges)
+  
+    error_info, tenant = auth_api._tenant_create(
+                                                 name = name, 
+                                                 description = description, 
+                                                 default_datastore = default_datastore, 
+                                                 default_privileges = default_privileges, 
+                                                 vm_list = vm_list, 
+                                                 privileges = privileges)
     if error_info:
         return operation_fail(error_info)
     else:
@@ -854,22 +851,16 @@ def tenant_create(args):
 
 def tenant_rm(args):
     """ Handle tenant rm command """
-    error_info, tenant = get_tenant_from_db(args.name)
-    if error_info:
-        return operation_fail(error_info)
-
+    name = args.name
     remove_volumes = False
     # If args "remove_volumes" is not specified in CLI
     # args.remove_volumes will be None
     if args.remove_volumes:
         print("All Volumes will be removed")
         remove_volumes = True
+    
+    error_info = auth_api._tenant_rm(name, remove_volumes)
 
-    error_info, auth_mgr = get_auth_mgr()
-    if error_info:
-        return operation_fail(error_info)
-
-    error_info = auth_mgr.remove_tenant(tenant.id, remove_volumes)
     if error_info:
         return operation_fail(error_info)
     else:
@@ -877,7 +868,7 @@ def tenant_rm(args):
 
 def tenant_ls(args):
     """ Handle tenant ls command """
-    error_info, tenant_list = get_tenant_list_from_db()
+    error_info, tenant_list = auth_api._tenant_ls()
     if error_info:
         return operation_fail(error_info)
 
@@ -887,23 +878,9 @@ def tenant_ls(args):
 
 def tenant_vm_add(args):
     """ Handle tenant vm add command """
-    error_info, tenant = get_tenant_from_db(args.name)
-    if error_info:
-        return operation_fail(error_info)
-
-    if not tenant:
-        error_info = "Tenant {0} does not exist".format(args.name)
-        return operation_fail(error_info)
-
-    error_info, vms = generate_tuple_from_vm_list(args.vm_list)
-    if error_info:
-        return operation_fail(error_info)
-    
-    error_info, auth_mgr = get_auth_mgr()
-    if error_info:
-        return operation_fail(error_info)
- 
-    error_info = tenant.add_vms(auth_mgr.conn, vms)
+    name = args.name
+    vm_list = args.vm_list
+    error_info = auth_api._tenant_vm_add(name, vm_list)
 
     if error_info:
         return operation_fail(error_info)
@@ -912,24 +889,9 @@ def tenant_vm_add(args):
 
 def tenant_vm_rm(args):
     """ Handle tenant vm rm command """
-    error_info, tenant = get_tenant_from_db(args.name)
-    if error_info:
-        return operation_fail(error_info)
-
-    if not tenant:
-        error_info = "Tenant {0} does not exist".format(args.name)
-        return operation_fail(error_info)
-
-    error_info, vms = generate_tuple_from_vm_list(args.vm_list)
-
-    if error_info:
-        return operation_fail(error_info)
-    
-    error_info, auth_mgr = get_auth_mgr()
-    if error_info:
-        return operation_fail(error_info)
-      
-    error_info = tenant.remove_vms(auth_mgr.conn, vms)
+    name = args.name
+    vm_list = args.vm_list
+    error_info = auth_api._tenant_vm_rm(name, vm_list)
 
     if error_info:
         return operation_fail(error_info)
@@ -952,19 +914,14 @@ def generate_tenant_vm_ls_rows(vms):
 
     return rows
 
-
 def tenant_vm_ls(args):
     """ Handle tenant vm ls command """
-    error_info, tenant = get_tenant_from_db(args.name)
+    error_info, vms = auth_api._tenant_vm_ls(args.name)
     if error_info:
-        return operation_fail(error_info)
-
-    if not tenant:
-        error_info = "Tenant {0} does not exist".format(args.name)
-        return operation_fail(error_info)
+        return error_info
 
     header = tenant_vm_ls_headers()
-    rows = generate_tenant_vm_ls_rows(tenant.vms)
+    rows = generate_tenant_vm_ls_rows(vms)
     print(cli_table.create(header, rows))
 
 def default_privileges():
@@ -1013,21 +970,18 @@ def generate_privileges(args):
 
 def tenant_access_add(args):
     """ Handle tenant access command """
-    error_info, tenant = get_tenant_from_db(args.name)
-    if error_info:
-        return operation_fail(error_info)
+    name = args.name
+    datastore = args.datastore
+    rights = args.rights
+    volume_maxsize = args.volume_maxsize
+    volume_totalsize = args.volume_totalsize
 
-    if not tenant:
-        error_info = "Tenant {0} does not exist".format(args.name)
-        return operation_fail(error_info)
-
-    privileges = generate_privileges(args)
-    
-    error_info, auth_mgr = get_auth_mgr()
-    if error_info:
-        return operation_fail(error_info)
-
-    error_info = tenant.set_datastore_access_privileges(auth_mgr.conn, [privileges])
+    error_info = auth_api._tenant_access_add(name = name,
+                                             datastore = datastore,
+                                             rights = rights,
+                                             volume_maxsize = volume_maxsize,
+                                             volume_totalsize = args.volume_totalsize
+                                             )
       
     if error_info:
         return operation_fail(error_info)
@@ -1069,28 +1023,14 @@ def generate_privileges_dict(privileges):
 
 def tenant_access_set(args):
     """ Handle tenant access set command """
-    error_info, tenant = get_tenant_from_db(args.name)
-    if error_info:
-        return operation_fail(error_info)
+    name = args.name
+    datastore = args.datastore
+    add_rights = args.add_rights
+    rm_rights = args.rm_rights
+    volume_maxsize = args.volume_maxsize
+    volume_totalsize = args.volume_totalsize
 
-    if not tenant:
-        error_info = "Tenant {0} does not exist".format(args.name)
-        return operation_fail(error_info)
-
-    privileges = [d for d in tenant.privileges if d[auth_data_const.COL_DATASTORE] == args.datastore]
-
-    if not privileges:
-        error_info = "No privileges exist for ({0}, {1})".format(args.name, args.datastore)
-        return operation_fail(error_info)
-
-    privileges_dict = generate_privileges_dict(privileges[0])
-    privileges_dict = modify_privileges(privileges_dict, args)
-
-    error_info, auth_mgr = get_auth_mgr()
-    if error_info:
-        return operation_fail(error_info)
-
-    error_info = tenant.set_datastore_access_privileges(auth_mgr.conn, [privileges_dict])
+    error_info = auth_api._tenant_access_set(name, datastore, add_rights, rm_rights, volume_maxsize, volume_totalsize)
 
     if error_info:
         return operation_fail(error_info)
@@ -1099,15 +1039,9 @@ def tenant_access_set(args):
 
 def tenant_access_rm(args):
     """ Handle tenant access rm command """
-    error_info, tenant = get_tenant_from_db(args.name)
-    if error_info:
-        return operation_fail(error_info)
-    
-    error_info, auth_mgr = get_auth_mgr()
-    if error_info:
-        return operation_fail(error_info)
-
-    error_info = tenant.remove_datastore_access_privileges(auth_mgr.conn, args.datastore)
+    name = args.name
+    datastore = args.datastore
+    error_info = auth_api._tenant_access_rm(name, datastore)
     if error_info:
         return operation_fail(error_info)
     else:
@@ -1136,11 +1070,10 @@ def generate_tenant_access_ls_rows(privileges):
 
 def tenant_access_ls(args):
     """ Handle tenant access ls command """
-    error_info, tenant = get_tenant_from_db(args.name)
+    name = args.name
+    error_info, privileges = auth_api._tenant_access_ls(name)
     if error_info:
         return operation_fail(error_info)
-
-    privileges = tenant.privileges
 
     header = tenant_access_ls_headers()
     rows = generate_tenant_access_ls_rows(privileges)
