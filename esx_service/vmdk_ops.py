@@ -183,7 +183,11 @@ def createVMDK(vmdk_path, vm_name, vol_name, opts={}, vm_uuid=None, vm_datastore
         msg = "Failed to create metadata kv store for {0}".format(vmdk_path)
         logging.warning(msg)
         error_info = err(msg)
-        remove_err = removeVMDK(vmdk_path, vm_name, tenant_uuid, datastore, vol_name)
+        remove_err = removeVMDK(vmdk_path = vmdk_path, 
+                                vol_name = vol_name, 
+                                vm_name = vm_name,
+                                tenant_uuid = tenant_uuid,
+                                datastore = datastore)
         if remove_err:
             error_info = error_info + remove_err
         return error_info
@@ -751,18 +755,19 @@ def executeRequest(vm_uuid, vm_name, config_path, cmd, full_vol_name, opts):
 
     if cmd == "get":
         response = getVMDK(vmdk_path, vol_name, datastore)
-    elif cmd == "create":
-        response = createVMDK(vmdk_path, vm_name, vol_name, opts, vm_uuid, vm_datastore)
-        # create succeed, insert infomation of this volume to volumes table
-        if not response:
-            if tenant_uuid:
-                vol_size_in_MB = convert.convert_to_MB(auth.get_vol_size(opts))
-                auth.add_volume_to_volumes_table(tenant_uuid, datastore, vol_name, vol_size_in_MB)
-            else:
-                logging.warning(" VM %s does not belong to any tenant", vm_name)
-
+    elif cmd == "create":          
+        response = createVMDK(vmdk_path = vmdk_path, 
+                              vm_name = vm_name, 
+                              vol_name = vol_name, 
+                              opts = opts, 
+                              tenant_uuid = tenant_uuid, 
+                              datastore = datastore)     
     elif cmd == "remove":
-        response = removeVMDK(vmdk_path, vol_name, vm_name, tenant_uuid, datastore)            
+        response = removeVMDK(vmdk_path = vmdk_path, 
+                              vol_name = vol_name,
+                              vm_name = vm_name,
+                              tenant_uuid = tenant_uuid,
+                              datastore = datastore)
     elif cmd == "attach":
         response = attachVMDK(vmdk_path, vm_uuid)
     elif cmd == "detach":
