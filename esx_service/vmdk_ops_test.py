@@ -102,7 +102,7 @@ class VmdkCreateRemoveTestCase(unittest.TestCase):
             vsan_policy.create(n, self.orig_policy_content)
 
     def tearDown(self):
-        vmdk_ops.removeVMDK(self.name)
+        vmdk_ops.removeVMDK(self.name, self.vm_name, self.volName)
         self.vmdk = None
         for n in self.policy_names:
             vsan_policy.delete(n)
@@ -536,7 +536,7 @@ class VmdkAuthorizeTestCase(unittest.TestCase):
         # remove the tenant
         error_info = self.auth_mgr.remove_tenant(tenant1.id, False)
         self.assertEqual(error_info, None)
-        error_info = self.auth_mgr.remove_volumes_from_volume_table(tenant1.id)
+        error_info = self.auth_mgr.remove_volumes_from_volumes_table(tenant1.id)
         self.assertEqual(error_info, None)
 
 class VmdkTenantTestCase(unittest.TestCase):
@@ -595,14 +595,13 @@ class VmdkTenantTestCase(unittest.TestCase):
     def tearDown(self):
         """ Cleanup after each test """
         logging.debug("VMDKAttachDetachTest tearDown path")
-        self.cleanup()
-
         # remove tenant
         error_info = auth_api._tenant_rm(
                                          name = self.tenant1_name, 
                                          remove_volumes = True) 
                                                 
-        self.assertEqual(None, error_info)      
+        self.assertEqual(None, error_info)
+        self.cleanup()      
             
     def cleanup(self):
         # remove VM
