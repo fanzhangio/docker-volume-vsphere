@@ -998,6 +998,10 @@ def generate_privileges(args):
 
 def tenant_access_add(args):
     """ Handle tenant access command """
+    error_info = check_args(args)
+    if error_info:
+        return operation_fail(error_info)
+
     error_info, tenant = get_tenant_from_db(args.name)
     if error_info:
         return operation_fail(error_info)
@@ -1014,6 +1018,16 @@ def tenant_access_add(args):
         return operation_fail(error_info)
     else:
         print "tenant access add succeeded"
+
+def check_args(args):
+    """ Check validity of CLI arguments """
+    if (args.volume_maxsize > args.volume_totalsize):
+        error_info = "Volume max size should not exceed the total size"
+    
+    if error_info:
+        return error_info
+    else
+        return None;
 
 def modify_privileges(privileges, args):
     """ Modify privileges based on CLI argument """
@@ -1050,6 +1064,10 @@ def generate_privileges_dict(privileges):
 
 def tenant_access_set(args):
     """ Handle tenant access set command """
+    error_info = check_args(args)
+    if error_info:
+        return operation_fail(error_info)
+
     error_info, tenant = get_tenant_from_db(args.name)
     if error_info:
         return operation_fail(error_info)
