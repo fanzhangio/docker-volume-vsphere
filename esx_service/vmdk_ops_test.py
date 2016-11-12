@@ -442,7 +442,6 @@ def remove_vm(si, vm_name):
         task = vm[0].Destroy_Task()
         vmdk_ops.wait_for_tasks(si, [task])
 
-@unittest.skip("Liping Need to remove!!!!")
 class VmdkAttachDetachTestCase(unittest.TestCase):
     """ Unit test for VMDK Attach and Detach ops """
 
