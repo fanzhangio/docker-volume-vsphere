@@ -681,7 +681,7 @@ class AuthorizationDataManager:
                     logging.error(msg)
                     error_info += msg
 
-        err = self.remove_volumes_from_volume_table(tenant_id)
+        err = self.remove_volumes_from_volumes_table(tenant_id)
         if err:
             logging.error("Failed to remove volumes from database %s", err)
             error_info += err
