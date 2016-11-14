@@ -157,6 +157,10 @@ def _tenant_rm(name, remove_volumes):
     if error_info:
         return error_info
     
+    if not tenant:
+        error_info = "Tenant {0} does not exist".format(name)
+        return error_info
+    
     error_info, auth_mgr = get_auth_mgr()
     if error_info:
         return error_info
@@ -275,6 +279,10 @@ def _tenant_access_rm(name, datastore):
     if error_info:
         return error_info
     
+    if not tenant:
+        error_info = "Tenant {0} does not exist".format(name)
+        return error_info
+    
     error_info, auth_mgr = get_auth_mgr()
     if error_info:
         return error_info
@@ -287,6 +295,10 @@ def _tenant_access_ls(name):
     error_info, tenant = get_tenant_from_db(name)
     if error_info:
         return error_info, None
+    
+    if not tenant:
+        error_info = "Tenant {0} does not exist".format(name)
+        return error_info
 
     return None, tenant.privileges 
     

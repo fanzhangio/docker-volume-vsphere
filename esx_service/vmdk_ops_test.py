@@ -543,11 +543,25 @@ class VmdkAuthorizeTestCase(unittest.TestCase):
     
     vm_name = 'test-vm'
     vm_uuid = str(uuid.uuid4())
+    tenant1 = None
         
     def setUp(self):
         self.auth_mgr = auth_data.AuthorizationDataManager()
         self.auth_mgr.connect()
 
+        self.cleanup()     
+    
+    def cleanup(self):
+        error_info, exist_tenant = self.auth_mgr.get_tenant('vmdk_auth_test')
+        if exist_tenant:
+             error_info = self.auth_mgr.remove_tenant(exist_tenant.id, False)
+             self.assertEqual(error_info, None)
+             error_info = self.auth_mgr.remove_volumes_from_volumes_table(exist_tenant.id)
+             self.assertEqual(error_info, None)
+
+    def tearDown(self):
+        self.cleanup()
+       
     def test_vmdkop_authorize(self):
         vm_ds = 'datastore1'
         vms = [(self.vm_uuid, self.vm_name)]
@@ -565,7 +579,6 @@ class VmdkAuthorizeTestCase(unittest.TestCase):
                                               default_privileges, vms, privileges)
         self.assertEqual(error_info, None)
         self.assertTrue(uuid.UUID(tenant1.id))
-
         # test CMD_CREATE without "create_volume" set
         privileges = [{'datastore': vm_ds,
                         'global_visibility': 0,
@@ -667,8 +680,7 @@ class VmdkTenantTestCase(unittest.TestCase):
     def setUp(self):
         """ Setup run before each test """
         logging.debug("VMDKTenantTest setUp path =%s", path)
-        self.cleanup()
-
+        
         if (not self.datastore_name):
             datastores = vmdk_utils.get_datastores()
             datastore = datastores[0]
@@ -679,7 +691,7 @@ class VmdkTenantTestCase(unittest.TestCase):
             self.datastore_path = datastore[2]
             logging.debug("datastore_name=%s datastore_path=%s", self.datastore_name,
                                                                  self.datastore_path)   
-        
+        self.cleanup()
         # get service_instance, and create VMs
         si = vmdk_ops.get_si()
         create_vm(si, self.vm1_name, self.datastore_name)
@@ -725,22 +737,24 @@ class VmdkTenantTestCase(unittest.TestCase):
     def tearDown(self):
         """ Cleanup after each test """
         logging.debug("VMDKTenantTest  tearDown path")
-        # remove tenant1
+        self.cleanup()      
+            
+    def cleanup(self):
+        # cleanup existing non-tenant volume
+        if not self.datastore_path:
+            vmdk_path = vmdk_utils.get_vmdk_path(self.datastore_path, self.non_tenant_vol_name)
+            if vmdk_ops.getVMDK(vmdk_path, self.non_tenant_vol_name, self.datastore):
+                vmdk_ops.removeVMDK(vmdk_path)
+
+        # cleanup existing tenant
         error_info = auth_api._tenant_rm(
                                          name = self.tenant1_name, 
                                          remove_volumes = True) 
                                                 
-        self.assertEqual(None, error_info)
-
         error_info = auth_api._tenant_rm(
                                          name = self.tenant2_name, 
                                          remove_volumes = True) 
                                                 
-        self.assertEqual(None, error_info)
-
-        self.cleanup()      
-            
-    def cleanup(self):
         # remove VM
         si = vmdk_ops.get_si()
         remove_vm(si, self.vm1_name)
