@@ -1,6 +1,5 @@
-/* global define DEBUG */
+/* global define */
 
-DEBUG = true;
 
 define(['angular'], function(angular) {
   'use strict';
@@ -63,21 +62,12 @@ define(['angular'], function(angular) {
       xhr.setRequestHeader('SOAPAction', 'urn:vim25/' + version);
       xhr.setRequestHeader('VMware-CSRF-Token', _csrfToken);
 
-      if (DEBUG) {
-        console.log(soapReq);
-      }
-
       xhr.send(soapReq);
 
       xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
           if (xhr.status === 200) {
             deferred.resolve(xhr.response);
-
-            if (DEBUG) {
-              console.log(xhr.response);
-            }
-
           } else {
             deferred.reject();
           }
