@@ -18,8 +18,8 @@ define([
   //
   'plugins/docker-volume-plugin/scripts/services/dvol-context-menu.js',
   'plugins/docker-volume-plugin/scripts/services/dvol-dialog-service.js',
-  'plugins/docker-volume-plugin/scripts/services/dvol-datacenter-vm-service.js',
-  'plugins/docker-volume-plugin/scripts/services/dvol-vms-grid-service.js',
+  'plugins/docker-volume-plugin/scripts/services/dvol-vm-service.js',
+  'plugins/docker-volume-plugin/scripts/services/dvol-vm-grid-service.js',
   'plugins/docker-volume-plugin/scripts/services/dvol-tenant-service.js',
   'plugins/docker-volume-plugin/scripts/services/dvol-datastore-service.js',
   'plugins/docker-volume-plugin/scripts/services/dvol-datastore-grid-service.js',
@@ -45,7 +45,7 @@ define([
   //
   DvolContextMenuService,
   DvolDialogService,
-  DvolDatacenterVmService,
+  DvolVmService,
   DvolVmGridService,
   DvolTenantService,
   DvolDatastoreService,
@@ -75,7 +75,7 @@ define([
   .service({
     'DvolDialogService': DvolDialogService,
     'DvolContextMenuService': DvolContextMenuService,
-    'DvolDatacenterVmService': DvolDatacenterVmService,
+    'DvolVmService': DvolVmService,
     'DvolVmGridService': DvolVmGridService,
     'DvolTenantService': DvolTenantService,
     'DvolDatastoreService': DvolDatastoreService,

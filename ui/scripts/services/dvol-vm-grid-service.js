@@ -3,7 +3,7 @@
 define([], function() {
   'use strict';
 
-  return function(DvolDatacenterVmService, GridUtils, vuiConstants, $filter, VMUtil) {
+  return function(DvolVmService, GridUtils, vuiConstants, $filter, VMUtil) {
 
     var translate = $filter('translate');
 
@@ -120,7 +120,7 @@ define([], function() {
 
     function makeVmsGrid(id, actions, filterFn, selectionMode, linkEnabled) {
 
-      var datacenterVmsGrid;
+      var vmsGrid;
 
       var gridProps = getGridProps(id, selectionMode, linkEnabled);
 
@@ -129,18 +129,18 @@ define([], function() {
         gridProps.actionBarOptions.actions = actions;
       }
 
-      datacenterVmsGrid = GridUtils.Grid(gridProps);
+      vmsGrid = GridUtils.Grid(gridProps);
 
       function refresh() {
-        return DvolDatacenterVmService.get().then(function(vms) {
-          datacenterVmsGrid.data = mapVmsToGrid(filterFn ? filterFn(vms) : vms);
+        return DvolVmService.get().then(function(vms) {
+          vmsGrid.data = mapVmsToGrid(filterFn ? filterFn(vms) : vms);
         });
       }
 
       refresh();
 
       return {
-        grid: datacenterVmsGrid,
+        grid: vmsGrid,
         refresh: refresh
       };
 
