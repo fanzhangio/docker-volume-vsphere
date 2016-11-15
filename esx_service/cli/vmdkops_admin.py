@@ -1125,7 +1125,7 @@ def check_tenant_access_set_args(args, privileges):
         return error_info
 
     # If volume max size is set, but volume total size is NOT set,
-    # volume max size should not exceed existing volume total size (if available), i.e. usage quota
+    # volume max size should not exceed existing volume total size (i.e. usage quota), if already set.
     existing_total_size = privileges[auth_data_const.COL_USAGE_QUOTA]
     if (args.volume_maxsize and not args.volume_totalsize and existing_total_size):
         new_max_size_in_MB = convert.convert_to_MB(args.volume_maxsize)
@@ -1135,8 +1135,8 @@ def check_tenant_access_set_args(args, privileges):
             return error_info
 
     # If volume total size is set, but volume max size is NOT set,
-    # 1) if existing volume max size is set, volume total size should not be smaller than that
-    # 2) if existing volume max size is not set, it should be set to the same as volume total size
+    # 1) if existing volume max size was already set, volume total size should not be smaller than that
+    # 2) if existing volume max size was not set, it should be set to the same as volume total size
     if (args.volume_totalsize and not args.volume_maxsize):
         new_total_size_in_MB = convert.convert_to_MB(args.volume_totalsize)
         existing_max_size = privileges[auth_data_const.COL_MAX_VOLUME_SIZE]
