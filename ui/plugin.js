@@ -24,7 +24,8 @@ define([
   'plugins/docker-volume-plugin/scripts/services/dvol-datastore-service.js',
   'plugins/docker-volume-plugin/scripts/services/dvol-datastore-grid-service.js',
   'plugins/docker-volume-plugin/scripts/services/dvol-tenant-grid-service.js',
-  'plugins/docker-volume-plugin/scripts/services/dvol-vsan-service.js',
+  'plugins/docker-volume-plugin/scripts/services/dvol-soap-service.js',
+  'plugins/docker-volume-plugin/scripts/services/dvol-vmodl-service.js',
   'services/grid-utils',
   'services/vm/vm'
   //
@@ -51,7 +52,8 @@ define([
   DvolDatastoreService,
   DvolDatastoreGridService,
   DvolTenantGridService,
-  DvolVsanService,
+  DvolSoapService,
+  DvolVmodlService,
   GridUtils,
   VMService,
   StorageService,
@@ -81,7 +83,8 @@ define([
     'DvolDatastoreService': DvolDatastoreService,
     'DvolDatastoreGridService': DvolDatastoreGridService,
     'DvolTenantGridService': DvolTenantGridService,
-    'DvolVsanService': DvolVsanService,
+    'DvolSoapService': DvolSoapService,
+    'DvolVmodlService': DvolVmodlService,
     'GridUtils': GridUtils,
     'vuiConstants': vuiConstants
   })
