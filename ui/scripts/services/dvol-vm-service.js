@@ -3,7 +3,7 @@
 define([], function() {
   'use strict';
 
-  return function(VMService) {
+  return function(VMService, DvolVmodlService) {
 
     function get() {
       var progress = function(percent) {
@@ -13,6 +13,7 @@ define([], function() {
     }
 
     this.get = get;
+    this.listVMsForTenant = DvolVmodlService.listVMsForTenant;
 
   };
 

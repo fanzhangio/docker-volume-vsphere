@@ -60,9 +60,9 @@ define([], function() {
     function filterVmsForThisTenant(allVms) {
       var selectedTenantRow = $scope.tenantsGrid.selectedItems[0];
       if (!selectedTenantRow) return [];
-      var selectedTenant = DvolTenantService.state.tenants[selectedTenantRow.id];
+      var selectedTenant = DvolTenantService.state.tenants[selectedTenantRow.name];
       var filteredVms = allVms.filter(function(vm) {
-        return selectedTenant.vms.indexOf(vm.moid) >= 0;
+        return selectedTenant.vms.indexOf(vm) >= 0;
       });
       return filteredVms;
     }
