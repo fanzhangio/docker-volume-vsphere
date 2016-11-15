@@ -11,9 +11,9 @@ define([], function() {
         return vmsAlreadyInTenant.indexOf(v.moid || v.id) < 0;
       });
     }
-    var grid = DvolVmGridService.makeVmsGrid('datacenterVmsGrid', [], filterFn, 'MULTI', false);
+    var grid = DvolVmGridService.makeVmsGrid('vmsGrid', [], filterFn, 'MULTI', false);
 
-    $scope.datacenterVmsGrid = grid.grid;
+    $scope.vmsGrid = grid.grid;
 
     var vmSearchOptions = {
       filters: [
@@ -25,12 +25,12 @@ define([], function() {
       placeholder: 'Search'
     };
 
-    GridUtils.addSearch($scope.datacenterVmsGrid, vmSearchOptions);
+    GridUtils.addSearch($scope.vmsGrid, vmSearchOptions);
 
     DialogService.setConfirmOptions({
       label: 'Add',
       onClick: function() {
-        DialogService.currentDialog().opaque.save($scope.datacenterVmsGrid
+        DialogService.currentDialog().opaque.save($scope.vmsGrid
           .selectedItems);
         return true;
       }
