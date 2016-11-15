@@ -18,9 +18,9 @@ define([], function() {
     // We might want to have a get action for tenant
     // As the api stands now, we'd need to run:
     //
-    // DvolVsanService.listTenants
-    // DvolVsanService.listDatastoreAccessForTenant
-    // DvolVsanService.listVMsForTenant
+    // DvolVmodlService.listTenants
+    // DvolVmodlService.listDatastoreAccessForTenant
+    // DvolVmodlService.listVMsForTenant
     //
     function get(tenantId) {
       var d = $q.defer();
@@ -39,7 +39,7 @@ define([], function() {
     }
 
     //
-    // DvolVsanService.listTenants
+    // DvolVmodlService.listTenants
     //
     function getAll() {
       var d = $q.defer();
@@ -52,8 +52,8 @@ define([], function() {
     }
 
     //
-    // DvolVsanService.createTenant
-    // DvolVsanService.addVMsToTenant
+    // DvolVmodlService.createTenant
+    // DvolVmodlService.addVMsToTenant
     //
     function add(tenant, vms) {
       var d = $q.defer();
@@ -73,7 +73,7 @@ define([], function() {
     }
 
     //
-    // DvolVsanService.removeTenant
+    // DvolVmodlService.removeTenant
     //
     function remove(tenantId) {
       var d = $q.defer();
@@ -90,7 +90,7 @@ define([], function() {
     }
 
     //
-    // DvolVsanService.removeDatastoreAccessForTenant
+    // DvolVmodlService.removeDatastoreAccessForTenant
     //
     function removeDatastore(tenantId, datastoreId) {
       var d = $q.defer();
@@ -110,7 +110,7 @@ define([], function() {
     }
 
     //
-    // DvolVsanService.removeVMsFromTenant
+    // DvolVmodlService.removeVMsFromTenant
     //
     // NOTE: decide if we want to support multiple VMs at same time
     // as it is now, we would just call the api with a single vm
@@ -144,7 +144,7 @@ define([], function() {
     }
 
     //
-    // DvolVsanService.addVMsToTenant
+    // DvolVmodlService.addVMsToTenant
     //
     function addVms(tenantId, vmIds) {
       var d = $q.defer();
@@ -167,7 +167,7 @@ define([], function() {
 
 
     //
-    // DvolVsanService.addDatastoreAccessForTenant
+    // DvolVmodlService.addDatastoreAccessForTenant
     //
     function addDatastores(tenantId, datastores) {
       var d = $q.defer();
@@ -190,7 +190,7 @@ define([], function() {
     }
 
     //
-    // DvolVsanService.modifyDatastoreAccessForTenant
+    // DvolVmodlService.modifyDatastoreAccessForTenant
     //
     function updateDatastore(tenantId, newlyEditedDatastore) {
       var d = $q.defer();
