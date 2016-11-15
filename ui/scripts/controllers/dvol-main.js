@@ -4,14 +4,14 @@ define([], function() {
   'use strict';
 
   return function($rootScope, $scope, $log, $state, $filter, $timeout, GridUtils, vuiConstants, DialogService,
-    DvolTenantService, DvolTenantGridService, DvolVsanService) {
+    DvolTenantService, DvolTenantGridService, DvolVmodlService) {
 
     // -----------------------------
     //
     // Temporary
     //
     // Here when the app is loaded we're temporarily making
-    // a call to DvolVsanService to test connectivity
+    // a call to DvolVmodlService to test connectivity
     //
     // TODO: remove this
     //
@@ -25,16 +25,16 @@ define([], function() {
       name: 'datastore1'
     };
 
-    DvolVsanService.createTenant(mockTenant)
-    .then(DvolVsanService.listTenants())
-    .then(DvolVsanService.addDatastoreAccessForTenant({
+    DvolVmodlService.createTenant(mockTenant)
+    .then(DvolVmodlService.listTenants())
+    .then(DvolVmodlService.addDatastoreAccessForTenant({
       name: mockTenant.name,
       datastore: mockDatastore.name,
       rights: ['create', 'mount'],
       volume_maxsize: '550MB',
       volume_totalsize: '3TB'
     }))
-    .then(DvolVsanService.modifyDatastoreAccessForTenant({
+    .then(DvolVmodlService.modifyDatastoreAccessForTenant({
       name: mockTenant.name,
       datastore: mockDatastore.name,
       add_rights: ['delete'],
@@ -42,22 +42,22 @@ define([], function() {
       volume_maxsize: '650MB',
       volume_totalsize: '4TB'
     }))
-    .then(DvolVsanService.removeTenant({
+    .then(DvolVmodlService.removeTenant({
       name: mockTenant.name
     }))
-    .then(DvolVsanService.addVMsToTenant({
+    .then(DvolVmodlService.addVMsToTenant({
       name: mockTenant.name,
       vms: ['virual-machine-1', 'virtual-machine-2', 'virtual-machine-3']
     }))
-    .then(DvolVsanService.removeVMsFromTenant({
+    .then(DvolVmodlService.removeVMsFromTenant({
       name: mockTenant.name,
       vms: ['virtual-machine-1']
     }))
-    .then(DvolVsanService.listVMsForTenant({
+    .then(DvolVmodlService.listVMsForTenant({
       name: mockTenant.name
     }))
-    .then(DvolVsanService.getDatastoreAccessPrivileges())
-    .then(DvolVsanService.createDatastoreAccessPrivileges({
+    .then(DvolVmodlService.getDatastoreAccessPrivileges())
+    .then(DvolVmodlService.createDatastoreAccessPrivileges({
       datastore: mockDatastore.name,
       create_volumes: true,
       delete_volumes: false,
@@ -65,11 +65,11 @@ define([], function() {
       max_volume_size: '600MB',
       usage_quota: '3TB'
     }))
-    .then(DvolVsanService.removeDatastoreAccessForTenant({
+    .then(DvolVmodlService.removeDatastoreAccessForTenant({
       name: mockTenant.name,
       datastore: mockDatastore.name
     }))
-    .then(DvolVsanService.listDatastoreAccessForTenant({
+    .then(DvolVmodlService.listDatastoreAccessForTenant({
       name: mockTenant.name
     }));
 
