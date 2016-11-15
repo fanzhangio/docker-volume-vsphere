@@ -101,9 +101,9 @@ define([], function() {
       // we don't want to refresh the grid because we'll lose tenant row selection
       var selectedTenantRow = $scope.tenantsGrid.selectedItems[0];
       if (!selectedTenantRow) return [];
-      var selectedTenant = DvolTenantService.state.tenants[selectedTenantRow.id];
+      var selectedTenant = DvolTenantService.state.tenants[selectedTenantRow.name];
       var filteredDatastores = allDatastores.filter(function(d) {
-        return selectedTenant.datastores[d.id || d.moid];
+        return selectedTenant.datastores ? selectedTenant.datastores[d.id || d.moid] : [];
       }).map(function(d) {
         return {
           datastore: d,
