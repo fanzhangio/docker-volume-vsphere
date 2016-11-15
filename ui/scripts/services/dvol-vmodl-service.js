@@ -5,19 +5,43 @@ define([], function() {
 
   return function(DvolSoapService) {
 
+    function parsePrivileges(privilegesEl) {
+      var privileges = {};
+      ['datastore',
+      'create_volumes',
+      'delete_volumes',
+      'mount_volumes',
+      'max_volume_size',
+      'usage_quota']
+      .forEach(function(prop) {
+        privileges[prop] = $($(privilegesEl).find(prop)[0]).text();
+      });
+      return privileges;
+    }
+
+    function parseTenant(tenantEl) {
+      var tenant = {};
+      ['name',
+      'description',
+      'default_datastore']
+      .forEach(function(prop) {
+        tenant[prop] = $($(tenantEl).find(prop)[0]).text();
+      });
+      tenant.vms = $(tenantEl).find('vms').toArray().map(function(vmEl) {
+        return $(vmEl).text();
+      });
+      tenant.default_privileges = parsePrivileges($(tenantEl).find('default_privileges')[0]);
+      return tenant;
+    }
+
     this.listTenants = function() {
       return DvolSoapService.request('ListTenants')
       .then(function(soapResponse) {
         var doc = $.parseXML(soapResponse);
         var listTenantsResponse = $(doc).find('ListTenantsResponse');
         var tenantEls = $(listTenantsResponse).find('returnval');
-        var tenants = tenantEls.map(function(tenantEl) {
-          var tenant = {};
-          tenant.name = $(tenantEl).find('name');
-          tenant.description = $(tenantEl).find('description');
-          return tenant;
-        });
-        console.log(tenants);
+        var tenants = tenantEls.toArray().map(parseTenant);
+        return tenants;
       });
     };
 
