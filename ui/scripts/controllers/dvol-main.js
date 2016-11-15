@@ -16,13 +16,24 @@ define([], function() {
     // TODO: remove this
     //
 
-    var mockTenant = {
-      name: 'ui-created-tenant',
-      description: 'a mock tenant named ui-created-tenant'
-    };
-
     var mockDatastore = {
       name: 'datastore1'
+    };
+
+    var mockPrivileges = {
+      datastore: mockDatastore.name,
+      create_volumes: true,
+      delete_volumes: false,
+      mount_volumes: false,
+      max_volume_size: '600MB',
+      usage_quota: '3TB'
+    };
+
+    var mockTenant = {
+      name: 'ui-created-tenant',
+      description: 'a mock tenant named ui-created-tenant',
+      default_datastore: mockDatastore.name,
+      default_privileges: mockPrivileges
     };
 
     DvolVmodlService.createTenant(mockTenant)
@@ -57,14 +68,7 @@ define([], function() {
       name: mockTenant.name
     }))
     .then(DvolVmodlService.getDatastoreAccessPrivileges())
-    .then(DvolVmodlService.createDatastoreAccessPrivileges({
-      datastore: mockDatastore.name,
-      create_volumes: true,
-      delete_volumes: false,
-      mount_volumes: false,
-      max_volume_size: '600MB',
-      usage_quota: '3TB'
-    }))
+    .then(DvolVmodlService.createDatastoreAccessPrivileges(mockPrivileges))
     .then(DvolVmodlService.removeDatastoreAccessForTenant({
       name: mockTenant.name,
       datastore: mockDatastore.name
