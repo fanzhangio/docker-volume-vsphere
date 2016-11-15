@@ -38,6 +38,9 @@ define([], function() {
 
     DvolVmodlService.createTenant(mockTenant)
     .then(DvolVmodlService.listTenants())
+    .then(function(tenantsRes) {
+      console.log(tenantsRes);
+    })
     .then(DvolVmodlService.addDatastoreAccessForTenant({
       name: mockTenant.name,
       datastore: mockDatastore.name,
