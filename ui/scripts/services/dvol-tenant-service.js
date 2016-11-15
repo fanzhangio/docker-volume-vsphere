@@ -51,7 +51,7 @@ define([], function() {
       // return d.promise;
       return DvolVmodlService.listTenants()
       .then(function(tenants) {
-        console.log('listTenants: ' + tenants);
+        setState(tenants);
         return tenants;
       });
     }
