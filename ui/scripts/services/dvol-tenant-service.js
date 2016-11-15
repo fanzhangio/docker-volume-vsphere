@@ -11,7 +11,7 @@ define([], function() {
     });
   }
 
-  return function($q) {
+  return function($q, DvolVmodlService) {
 
 
     //
@@ -42,13 +42,18 @@ define([], function() {
     // DvolVmodlService.listTenants
     //
     function getAll() {
-      var d = $q.defer();
-      setTimeout(function() {
-        var tenants = JSON.parse(localStorage.getItem('tenants')) || [];
-        d.resolve(tenants);
-        setState(tenants);
-      }, 200);
-      return d.promise;
+      // var d = $q.defer();
+      // setTimeout(function() {
+      //   var tenants = JSON.parse(localStorage.getItem('tenants')) || [];
+      //   d.resolve(tenants);
+      //   setState(tenants);
+      // }, 200);
+      // return d.promise;
+      return DvolVmodlService.listTenants()
+      .then(function(tenants) {
+        console.log('listTenants: ' + tenants);
+        return tenants;
+      });
     }
 
     //
