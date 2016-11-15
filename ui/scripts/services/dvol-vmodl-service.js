@@ -1,4 +1,4 @@
-/* global define */
+/* global define $ */
 
 define([], function() {
   'use strict';
@@ -6,15 +6,27 @@ define([], function() {
   return function(DvolSoapService) {
 
     this.listTenants = function() {
-      return DvolSoapService.request('ListTenants');
+      return DvolSoapService.request('ListTenants')
+      .then(function(soapResponse) {
+        var doc = $.parseXML(soapResponse);
+        var listTenantsResponse = $(doc).find('ListTenantsResponse');
+        var tenantEls = $(listTenantsResponse).find('returnval');
+        var tenants = tenantEls.map(function(tenantEl) {
+          var tenant = {};
+          tenant.name = $(tenantEl).find('name');
+          tenant.description = $(tenantEl).find('description');
+          return tenant;
+        });
+        console.log(tenants);
+      });
     };
 
     this.createTenant = function(args) {
       var argsSOAP = [
         '<name>' + args.name + '</name>',
         '<description>' + args.description + '</description>',
-        '<default_datastore>' + args.defaultDatastore + '</default_datastore>',
-        '<default_privileges>' + args.defaultPrivileges + '</default_privileges>'
+        '<default_datastore>' + args.default_datastore + '</default_datastore>',
+        '<default_privileges>' + args.default_privileges + '</default_privileges>'
       ].join('');
       return DvolSoapService.request('CreateTenant', argsSOAP);
     };
