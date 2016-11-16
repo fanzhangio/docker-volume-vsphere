@@ -51,6 +51,33 @@ define([], function() {
       // return d.promise;
       return DvolVmodlService.listTenants()
       .then(function(tenants) {
+        tenants.forEach(function(t) {
+          t.id = t.name;
+          // t.vms = t.vms || [];
+          // t.datastores = t.datastores || [];
+          //
+          // TODO: unplug these fixtures
+          //
+          t.vms = ['Tuna VM', 'Salmon VM'];
+          t.datastores = {
+            'datastore1': {
+              datastore: 'datastore1',
+              create_volumes: true,
+              delete_volumes: false,
+              mount_volumes: false,
+              max_volume_size: '2TB',
+              usage_quota: '600GB'
+            },
+            'bugs.eng.vmware.com_0': {
+              datastore: 'bugs.eng.vmware.com_0',
+              create_volumes: true,
+              delete_volumes: true,
+              mount_volumes: true,
+              max_volume_size: '10TB',
+              usage_quota: '4TB'
+            }
+          };
+        });
         setState(tenants);
         return tenants;
       });
