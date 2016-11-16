@@ -8,12 +8,12 @@ define([], function() {
     var vmsAlreadyInTenant = DialogService.currentDialog().opaque.vmsAlreadyInTenant;
     function filterFn(vms) {
       return vms.filter(function(v) {
-        return vmsAlreadyInTenant.indexOf(v.moid || v.id) < 0;
+        return vmsAlreadyInTenant.indexOf(v.name) < 0;
       });
     }
-    var grid = DvolVmGridService.makeVmsGrid('vmsGrid', [], filterFn, 'MULTI', false);
+    var grid = DvolVmGridService.makeVmsGrid('availableVmsGrid', [], filterFn, 'MULTI', false);
 
-    $scope.vmsGrid = grid.grid;
+    $scope.availableVmsGrid = grid.grid;
 
     var vmSearchOptions = {
       filters: [
@@ -25,12 +25,12 @@ define([], function() {
       placeholder: 'Search'
     };
 
-    GridUtils.addSearch($scope.vmsGrid, vmSearchOptions);
+    GridUtils.addSearch($scope.availableVmsGrid, vmSearchOptions);
 
     DialogService.setConfirmOptions({
       label: 'Add',
       onClick: function() {
-        DialogService.currentDialog().opaque.save($scope.vmsGrid
+        DialogService.currentDialog().opaque.save($scope.availableVmsGrid
           .selectedItems);
         return true;
       }
