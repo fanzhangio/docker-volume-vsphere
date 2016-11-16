@@ -282,10 +282,10 @@ define([], function() {
       return d.promise;
     }
 
-    // state
+    // "state"
     // -----
     //
-    // READING from state
+    // READING from "state"
     //
     // "state" is a representation of the tenants objects in memory
     // it's exposed for read-only use via this service's getState() method returning a copy
@@ -293,18 +293,21 @@ define([], function() {
     // for situations where up-to-date global state isn't required
     // and/or hasn't been requested (e.g. via the refresh buttons) by the user
     //
-    // WRITING to state
+    // WRITING to "state"
     //
     // currently all mutable state for this UI is contained within the Tenant List
     // so "state" is just a list of tenants (in the form of an object keyed by tenant id)
     // AND any mutation to application state must go through this service
     //
-    // state is private to this service
+    // "state" is private to this service
     // it's expected that any function that communicates with the server
     // will be followed by:
     // 1) if it's not already present in the server's response,
     //    the function must obtain the current Tenant List from the server
-    // 2) the function must call setState
+    // 2) the function must call setState, passing this current Tenant List (as an array)
+    //    to replace the previous "state" value with the current one
+    //
+    // TODO: refactor this to put the setState call at a lower level
     //
 
     var state = {};
