@@ -20,7 +20,7 @@ define([], function() {
               if (!selectedTenant) return; // TODO: async error
               if (!selectedVmsRows) return;
               var selectedVmsIds = selectedVmsRows.map(function(vm) {
-                return vm.moid || vm.id;
+                return vm.name;
               });
               if (selectedVmsIds.length < 1) return;
               DvolTenantService.addVms(selectedTenant.id, selectedVmsIds)
