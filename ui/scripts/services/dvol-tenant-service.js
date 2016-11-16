@@ -191,26 +191,28 @@ define([], function() {
         name: tenantId,
         vms: vmIds
       })
-      .then(function(res) {
-        console.log('addVMsToTenant response: ' + res);
-
+      .then(getAll)
+      .then(function(tenants) {
+        console.log('addVMsToTenant response: ' + tenants);
+        //
+        // TODO: remove this fixture once API is ready
+        //
+        var matches = tenants.filter(function(t) {
+          return t.id === tenantId;
+        });
+        if (!matches.length === 1) {
+          console.log('tenant does not match');
+        }
+        var tenant = matches[0];
+        tenant.vms = tenant.vms || [];
+        var newVms = dedupe(tenant.vms.concat(vmIds));
+        tenant.vms = newVms;
+        //
+        //
+        //
+        setState(tenants);
+        return tenant;
       });
-
-      // setTimeout(function() {
-      //   var tenants = JSON.parse(localStorage.getItem('tenants')) || [];
-      //   var matches = tenants.filter(function(t) {
-      //     return t.id === tenantId;
-      //   });
-      //   if (!matches.length === 1) return; // TODO: handle asnyc error
-      //   var tenant = matches[0];
-      //   tenant.vms = tenant.vms || [];
-      //   var newVms = dedupe(tenant.vms.concat(vmIds));
-      //   tenant.vms = newVms;
-      //   localStorage.setItem('tenants', JSON.stringify(tenants));
-      //   d.resolve(tenant);
-      //   setState(tenants);
-      // }, 200);
-      // return d.promise;
 
     }
 
