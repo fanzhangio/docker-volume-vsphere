@@ -26,7 +26,7 @@ define([], function() {
               DvolTenantService.addVms(selectedTenant.id, selectedVmsIds)
                 .then(vmsGrid.refresh);
             },
-            vmsAlreadyInTenant: DvolTenantService.state.tenants[$scope.tenantsGrid.selectedItems[0].id].vms
+            vmsAlreadyInTenant: DvolTenantService.getState().tenants[$scope.tenantsGrid.selectedItems[0].id].vms
           });
         }
       },
@@ -60,7 +60,7 @@ define([], function() {
     function filterVmsForThisTenant(allVms) {
       var selectedTenantRow = $scope.tenantsGrid.selectedItems[0];
       if (!selectedTenantRow) return [];
-      var selectedTenant = DvolTenantService.state.tenants[selectedTenantRow.id];
+      var selectedTenant = DvolTenantService.getState().tenants[selectedTenantRow.id];
       var filteredVms = allVms.filter(function(vm) {
         return selectedTenant.vms.indexOf(vm.name) >= 0;
       });

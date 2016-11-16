@@ -1,4 +1,4 @@
-/* global define */
+/* global define _ */
 
 define([], function() {
   'use strict';
@@ -187,22 +187,31 @@ define([], function() {
     // DvolVmodlService.addVMsToTenant
     //
     function addVms(tenantId, vmIds) {
-      var d = $q.defer();
-      setTimeout(function() {
-        var tenants = JSON.parse(localStorage.getItem('tenants')) || [];
-        var matches = tenants.filter(function(t) {
-          return t.id === tenantId;
-        });
-        if (!matches.length === 1) return; // TODO: handle asnyc error
-        var tenant = matches[0];
-        tenant.vms = tenant.vms || [];
-        var newVms = dedupe(tenant.vms.concat(vmIds));
-        tenant.vms = newVms;
-        localStorage.setItem('tenants', JSON.stringify(tenants));
-        d.resolve(tenant);
-        setState(tenants);
-      }, 200);
-      return d.promise;
+      return DvolVmodlService.addVMsToTenant({
+        name: tenantId,
+        vms: vmIds
+      })
+      .then(function(res) {
+        console.log('addVMsToTenant response: ' + res);
+
+      });
+
+      // setTimeout(function() {
+      //   var tenants = JSON.parse(localStorage.getItem('tenants')) || [];
+      //   var matches = tenants.filter(function(t) {
+      //     return t.id === tenantId;
+      //   });
+      //   if (!matches.length === 1) return; // TODO: handle asnyc error
+      //   var tenant = matches[0];
+      //   tenant.vms = tenant.vms || [];
+      //   var newVms = dedupe(tenant.vms.concat(vmIds));
+      //   tenant.vms = newVms;
+      //   localStorage.setItem('tenants', JSON.stringify(tenants));
+      //   d.resolve(tenant);
+      //   setState(tenants);
+      // }, 200);
+      // return d.promise;
+
     }
 
 
@@ -273,6 +282,31 @@ define([], function() {
       return d.promise;
     }
 
+    // state
+    // -----
+    //
+    // READING from state
+    //
+    // "state" is a representation of the tenants objects in memory
+    // it's exposed for read-only use via this service's getState() method returning a copy
+    // it's meant to be available to the rest of the UI
+    // for situations where up-to-date global state isn't required
+    // and/or hasn't been requested (e.g. via the refresh buttons) by the user
+    //
+    // WRITING to state
+    //
+    // currently all mutable state for this UI is contained within the Tenant List
+    // so "state" is just a list of tenants (in the form of an object keyed by tenant id)
+    // AND any mutation to application state must go through this service
+    //
+    // state is private to this service
+    // it's expected that any function that communicates with the server
+    // will be followed by:
+    // 1) if it's not already present in the server's response,
+    //    the function must obtain the current Tenant List from the server
+    // 2) the function must call setState
+    //
+
     var state = {};
     function setState(tenantsArr) {
       var tenantsObj = {};
@@ -280,6 +314,10 @@ define([], function() {
         tenantsObj[t.id] = t;
       });
       state.tenants = tenantsObj;
+    }
+
+    function getState() {
+      return _.clone(state);
     }
 
     this.getAll = getAll;
@@ -292,7 +330,7 @@ define([], function() {
     this.addDatastores = addDatastores;
     this.updateDatastore = updateDatastore;
     this.update = update;
-    this.state = state;
+    this.getState = getState;
 
   };
 
