@@ -13,7 +13,6 @@ define([], function() {
 
   return function($q, DvolVmodlService) {
 
-
     //
     // We might want to have a get action for tenant
     // As the api stands now, we'd need to run:
@@ -183,6 +182,20 @@ define([], function() {
       });
     }
 
+    function pickTenantById(tenantId, tenants) {
+      var matches = tenants.filter(function(t) {
+        return t.id === tenantId;
+      });
+      if (!matches.length === 1) {
+        console.log('tenant does not match');
+        //
+        // TODO: better error handling
+        //
+      }
+      var tenant = matches[0];
+      return tenant;
+    }
+
     //
     // DvolVmodlService.addVMsToTenant
     //
@@ -193,17 +206,10 @@ define([], function() {
       })
       .then(getAll)
       .then(function(tenants) {
-        console.log('addVMsToTenant response: ' + tenants);
         //
         // TODO: remove this fixture once API is ready
         //
-        var matches = tenants.filter(function(t) {
-          return t.id === tenantId;
-        });
-        if (!matches.length === 1) {
-          console.log('tenant does not match');
-        }
-        var tenant = matches[0];
+        var tenant = pickTenantById(tenantId, tenants);
         tenant.vms = tenant.vms || [];
         var newVms = dedupe(tenant.vms.concat(vmIds));
         tenant.vms = newVms;
@@ -216,28 +222,36 @@ define([], function() {
 
     }
 
-
+    function getRightsFromPermissions(perms) {
+      return ['create', 'mount', 'remove'].filter(function(r) {
+        return perms[r + '_volumes'];
+      });
+    }
     //
     // DvolVmodlService.addDatastoreAccessForTenant
     //
-    function addDatastores(tenantId, datastores) {
-      var d = $q.defer();
-      setTimeout(function() {
-        var tenants = JSON.parse(localStorage.getItem('tenants')) || [];
-        var matches = tenants.filter(function(t) {
-          return t.id === tenantId;
-        });
-        if (!matches.length === 1) return; // TODO: handle asnyc error
-        var tenant = matches[0];
+    function addDatastore(tenantId, datastore) {
+      return DvolVmodlService.addDatastoreAccessForTenant({
+        name: tenantId,
+        datastore: datastore.datastore.name,
+        rights: getRightsFromPermissions(datastore.permissions),
+        volume_maxsize: datastore.permissions.volume_maxsize,
+        volume_totalsize: datastore.permissions.volume_totalsize
+      })
+      .then(getAll)
+      .then(function(tenants) {
+        //
+        // TODO: remove this fixture once API is ready
+        //
+        var tenant = pickTenantById(tenantId, tenants);
         tenant.datastores = tenant.datastores || {};
-        datastores.forEach(function(ds) {
-          tenant.datastores[ds.datastore] = ds;
-        });
-        localStorage.setItem('tenants', JSON.stringify(tenants));
-        d.resolve(tenant);
+        tenant.datastores[datastore.datastore.name] = datastore.datastore;
+        //
+        //
+        //
         setState(tenants);
-      }, 200);
-      return d.promise;
+        return tenant;
+      });
     }
 
     //
@@ -332,7 +346,7 @@ define([], function() {
     this.get = get;
     this.add = add;
     this.addVms = addVms;
-    this.addDatastores = addDatastores;
+    this.addDatastore = addDatastore;
     this.updateDatastore = updateDatastore;
     this.update = update;
     this.getState = getState;
