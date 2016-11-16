@@ -55,7 +55,7 @@ define([], function() {
         enabled: true,
         onClick: function() {
           if ($scope.datastoresGrid.selectedItems.length < 1) return;
-          var datastoreId = $scope.datastoresGrid.selectedItems[0].id || $scope.datastoresGrid.selectedItems[0].moid;
+          var datastoreId = $scope.datastoresGrid.selectedItems[0].name;
           DvolTenantService.get($scope.tenantsGrid.selectedItems[0].id)
           .then(function(tenant) {
             var datastore = tenant.datastores[datastoreId];
@@ -80,7 +80,7 @@ define([], function() {
           if (!selectedTenant) return;
           var selectedDatastore = $scope.datastoresGrid.selectedItems[0];
           if (!selectedDatastore) return;
-          DvolTenantService.removeDatastore(selectedTenant.id, selectedDatastore.moid || selectedDatastore.id)
+          DvolTenantService.removeDatastore(selectedTenant.id, selectedDatastore.name)
             .then(datastoresGrid.refresh);
         }
       },
@@ -103,11 +103,11 @@ define([], function() {
       if (!selectedTenantRow) return [];
       var selectedTenant = DvolTenantService.state.tenants[selectedTenantRow.id];
       var filteredDatastores = allDatastores.filter(function(d) {
-        return selectedTenant.datastores ? selectedTenant.datastores[d.id || d.moid] : [];
+        return selectedTenant.datastores ? selectedTenant.datastores[d.name] : [];
       }).map(function(d) {
         return {
           datastore: d,
-          permissions: selectedTenant.datastores[d.id || d.moid].permissions
+          permissions: selectedTenant.datastores[d.name].permissions
         };
       });
       return filteredDatastores;

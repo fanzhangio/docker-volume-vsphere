@@ -62,19 +62,23 @@ define([], function() {
           t.datastores = {
             'datastore1': {
               datastore: 'datastore1',
-              create_volumes: true,
-              delete_volumes: false,
-              mount_volumes: false,
-              max_volume_size: '2TB',
-              usage_quota: '600GB'
+              permissions: {
+                create_volumes: true,
+                delete_volumes: false,
+                mount_volumes: false,
+                max_volume_size: '2TB',
+                usage_quota: '600GB'
+              }
             },
             'bugs.eng.vmware.com_0': {
               datastore: 'bugs.eng.vmware.com_0',
-              create_volumes: true,
-              delete_volumes: true,
-              mount_volumes: true,
-              max_volume_size: '10TB',
-              usage_quota: '4TB'
+              permissions: {
+                create_volumes: true,
+                delete_volumes: true,
+                mount_volumes: true,
+                max_volume_size: '10TB',
+                usage_quota: '4TB'
+              }
             }
           };
         });
