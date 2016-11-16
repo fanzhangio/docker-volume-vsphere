@@ -21,7 +21,7 @@ define([], function() {
               if (!selectedDatastoresRows) return;
               var datastores = selectedDatastoresRows.map(function(dr) {
                 return {
-                  datastore: dr.id,
+                  datastore: dr.name,
                   permissions: {
                     create_volumes: false,
                     mount_volumes: false,
@@ -31,8 +31,16 @@ define([], function() {
                   }
                 };
               });
+              //
+              // originally there was support for multi-select of datastores
+              // this is where we transition from that model to a single datastore at a time model
+              // by taking only the first in the array
+              //
               var firstDatastore = datastores[0]; // will be only one in SINGLE mode
-              DvolTenantService.addDatastores(selectedTenant.id, datastores)
+              //
+              //
+              //
+              DvolTenantService.addDatastore(selectedTenant.id, firstDatastore)
                 .then(datastoresGrid.refresh)
                 .then(function() {
                   DialogService.showDialog('dvol.edit-datastore', {
