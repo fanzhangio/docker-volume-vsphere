@@ -86,30 +86,24 @@ define([], function() {
 
     var permColumnDefs = [
       {
-        field: 'create',
-        displayName: 'Create'
+        field: 'create_volumes',
+        displayName: 'Create Volumes'
       },
       {
-        field: 'mount',
-        displayName: 'Mount'
+        field: 'mount_volumes',
+        displayName: 'Mount Volumes'
       },
       {
-        field: 'remove',
-        displayName: 'Remove'
+        field: 'remove_volumes',
+        displayName: 'Remove Volumes'
       },
       {
-        field: 'maxVolume',
-        displayName: 'Max Volume',
-        template: function(dataItem) {
-          return dataItem.maxVolume + ' GB';
-        }
+        field: 'max_volume_size',
+        displayName: 'Max Volume'
       },
       {
-        field: 'totalVolume',
-        displayName: 'Total volume',
-        template: function(dataItem) {
-          return dataItem.totalVolume + ' GB';
-        }
+        field: 'usage_quota',
+        displayName: 'Usage Quota'
       }
     ];
 
