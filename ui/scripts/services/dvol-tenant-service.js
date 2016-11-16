@@ -51,7 +51,7 @@ define([], function() {
       // return d.promise;
       return DvolVmodlService.listTenants()
       .then(function(tenants) {
-        tenants.forEach(function(t) {
+        tenants.forEach(function(t,i) {
           t.id = t.name;
           // t.vms = t.vms || [];
           // t.datastores = t.datastores || [];
@@ -81,6 +81,10 @@ define([], function() {
               }
             }
           };
+          if (i === 0) {
+            t.vms.push('Shark VM');
+            delete t.datastores['bugs.eng.vmware.com_0'];
+          }
         });
         setState(tenants);
         return tenants;
