@@ -23,11 +23,11 @@ define([], function() {
                 return {
                   datastore: dr.id,
                   permissions: {
-                    create: false,
-                    mount: false,
-                    remove: false,
-                    maxVolume: 0,
-                    totalVolume: 0
+                    create_volumes: false,
+                    mount_volumes: false,
+                    remove_volumes: false,
+                    max_volume_size: '',
+                    usage_quota: ''
                   }
                 };
               });
@@ -101,7 +101,7 @@ define([], function() {
       // we don't want to refresh the grid because we'll lose tenant row selection
       var selectedTenantRow = $scope.tenantsGrid.selectedItems[0];
       if (!selectedTenantRow) return [];
-      var selectedTenant = DvolTenantService.state.tenants[selectedTenantRow.name];
+      var selectedTenant = DvolTenantService.state.tenants[selectedTenantRow.id];
       var filteredDatastores = allDatastores.filter(function(d) {
         return selectedTenant.datastores ? selectedTenant.datastores[d.id || d.moid] : [];
       }).map(function(d) {
