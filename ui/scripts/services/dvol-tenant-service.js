@@ -223,7 +223,7 @@ define([], function() {
     }
 
     function getRightsFromPermissions(perms) {
-      return ['create', 'mount', 'remove'].filter(function(r) {
+      return ['create', 'mount', 'delete'].filter(function(r) {
         return perms[r + '_volumes'];
       });
     }
@@ -260,7 +260,7 @@ define([], function() {
     function updateDatastore(tenantId, updatedDatastore) {
       var add_rights = [];
       var remove_rights = [];
-      ['create', 'mount', 'remove'].forEach(function(p) {
+      ['create', 'mount', 'delete'].forEach(function(p) {
         if (updatedDatastore.permissions[p + '_volumes']) {
           add_rights.push(p);
         } else {

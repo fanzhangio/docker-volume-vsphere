@@ -26,7 +26,7 @@ define([], function() {
                   //
                   // TODO: replace these hard-coded default perms with those that come back with (newly created) tenant
                   //
-                  
+
                   permissions: {
                     create_volumes: false,
                     mount_volumes: false,
@@ -63,7 +63,7 @@ define([], function() {
                         // as the way to update a datastore
                         //
                         // the actual API uses an add_rights & remove_right approach to modifying
-                        // the create, remove, mount permissions
+                        // the create, delete, mount permissions
                         //
                         // so we pass down the original permissions so the "deltas" can be figured out
                         //
