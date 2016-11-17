@@ -257,24 +257,38 @@ define([], function() {
     //
     // DvolVmodlService.modifyDatastoreAccessForTenant
     //
-    function updateDatastore(tenantId, updatedDatastore, originalPermissions) {
-      var originalRights = getRightsFromPermissions(originalPermissions);
-      var updatedRights = getRightsFromPermissions(updatedDatastore.permissions);
-      ["create", "mount", "remove"].forEach(function(p) {
-        if (updatedPermissions[p + "_volumes"]) {
+    function updateDatastore(tenantId, updatedDatastore) {
+      var add_rights = [];
+      var remove_rights = [];
+      ['create', 'mount', 'remove'].forEach(function(p) {
+        if (updatedDatastore.permissions[p + '_volumes']) {
           add_rights.push(p);
-        }
-        else {
+        } else {
           remove_rights.push(p);
         }
       });
       return DvolVmodlService.modifyDatastoreAccessForTenant({
         name: tenantId,
-        datastore: datastore.datastore.name,
-        rights: getRightsFromPermissions(datastore.permissions),
-        volume_maxsize: datastore.permissions.volume_maxsize,
-        volume_totalsize: datastore.permissions.volume_totalsize
+        datastore: updatedDatastore.datastore.name,
+        add_rights: add_rights,
+        remove_rights: remove_rights,
+        volume_maxsize: updatedDatastore.permissions.volume_maxsize,
+        volume_totalsize: updatedDatastore.permissions.volume_totalsize
       })
+      .then(getAll)
+      .then(function(tenants) {
+        //
+        // TODO: remove this fixture once API is ready
+        //
+        var tenant = pickTenantById(tenantId, tenants);
+        tenant.datastores = tenant.datastores || {};
+        tenant.datastores[updatedDatastore.datastore.name] = updatedDatastore.datastore;
+        //
+        //
+        //
+        setState(tenants);
+        return tenant;
+      });
 
 
 
