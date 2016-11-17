@@ -22,10 +22,15 @@ define([], function() {
               var datastores = selectedDatastoresRows.map(function(dr) {
                 return {
                   datastore: dr.name,
+
+                  //
+                  // TODO: replace these hard-coded default perms with those that come back with (newly created) tenant
+                  //
+                  
                   permissions: {
                     create_volumes: false,
                     mount_volumes: false,
-                    remove_volumes: false,
+                    delete_volumes: false,
                     max_volume_size: '',
                     usage_quota: ''
                   }

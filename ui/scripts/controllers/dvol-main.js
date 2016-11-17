@@ -176,7 +176,7 @@ define([], function() {
       })[0];
     }
 
-    $scope.$watch('tenantsGrid.selectedItems', function() {
+    $scope.$watch('tenantsGrid.selectedItems', function(newVal, oldVal) {
       var editAction = findAction($scope.tenantsGrid.actionBarOptions.actions, 'edit-tenant-button');
       var removeAction = findAction($scope.tenantsGrid.actionBarOptions.actions, 'remove-tenant-button');
       if ($scope.tenantsGrid.selectedItems.length < 1) {
@@ -186,8 +186,10 @@ define([], function() {
         editAction.enabled = true;
         removeAction.enabled = true;
       }
-      $rootScope.vmsGrid && $rootScope.vmsGrid.refresh();
-      $rootScope.datastoresGrid && $rootScope.datastoresGrid.refresh();
+      if (newVal !== oldVal) {
+        $rootScope.vmsGrid && $rootScope.vmsGrid.refresh();
+        $rootScope.datastoresGrid && $rootScope.datastoresGrid.refresh();
+      }
     });
 
     //
