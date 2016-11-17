@@ -257,7 +257,29 @@ define([], function() {
     //
     // DvolVmodlService.modifyDatastoreAccessForTenant
     //
-    function updateDatastore(tenantId, newlyEditedDatastore) {
+    function updateDatastore(tenantId, updatedDatastore, originalPermissions) {
+      var originalRights = getRightsFromPermissions(originalPermissions);
+      var updatedRights = getRightsFromPermissions(updatedDatastore.permissions);
+      ["create", "mount", "remove"].forEach(function(p) {
+        if (updatedPermissions[p + "_volumes"]) {
+          add_rights.push(p);
+        }
+        else {
+          remove_rights.push(p);
+        }
+      });
+      return DvolVmodlService.modifyDatastoreAccessForTenant({
+        name: tenantId,
+        datastore: datastore.datastore.name,
+        rights: getRightsFromPermissions(datastore.permissions),
+        volume_maxsize: datastore.permissions.volume_maxsize,
+        volume_totalsize: datastore.permissions.volume_totalsize
+      })
+
+
+
+
+
       var d = $q.defer();
       setTimeout(function() {
         var tenants = JSON.parse(localStorage.getItem('tenants')) || [];
