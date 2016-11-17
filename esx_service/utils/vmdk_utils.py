@@ -243,8 +243,7 @@ def get_vm_config_path(vm_name):
     si = vmdk_ops.get_si()
     try:
         vm = [d for d in si.content.rootFolder.childEntity[0].vmFolder.childEntity if d.config.name == vm_name]
-        config_path = vm[0].summary.config.vmPathName
-       
+        config_path = vm[0].summary.config.vmPathName   
     except:
         return None
     
@@ -257,4 +256,14 @@ def get_vm_config_path(vm_name):
     datastore_path = datastore_path[:-9]
     vm_config_path = os.path.join(datastore_path, path)
     return vm_config_path
+
+def find_vm_by_name(vm_name):
+    si = vmdk_ops.get_si()
+    try:
+        vm = [d for d in si.content.rootFolder.childEntity[0].vmFolder.childEntity 
+                if d.config.name == vm_name]
+        return vm[0]
+
+    except:
+        return None
 

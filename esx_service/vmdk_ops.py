@@ -84,6 +84,7 @@ import vsan_info
 import auth
 import sqlite3
 import convert
+import error_code
 
 # Python version 3.5.1
 PYTHON64_VERSION = 50659824
@@ -200,9 +201,7 @@ def createVMDK(vmdk_path, vm_name, vol_name, opts={}, tenant_uuid=None, datastor
         vol_size_in_MB = convert.convert_to_MB(auth.get_vol_size(opts))
         auth.add_volume_to_volumes_table(tenant_uuid, datastore, vol_name, vol_size_in_MB)
     else:
-        logging.warning(" VM %s does not belong to any tenant", vm_name)
-
-
+        logging.debug(error_code.VM_NOT_BELONG_TO_TENANT.format(vm_name))
 
 def make_create_cmd(opts, vmdk_path):
     """ Return the command used to create a VMDK """
@@ -571,7 +570,8 @@ def removeVMDK(vmdk_path, vol_name=None, vm_name=None, tenant_uuid=None, datasto
                 return error_info
             else:
                 if not vm_name:
-                    logging.warning("VM %s does not belong to any tenant", vm_name)
+                    logging.debug(error_code.VM_NOT_BELONG_TO_TENANT.format(vm_name))
+
             return None
 
 def getVMDK(vmdk_path, vol_name, datastore):

@@ -23,6 +23,7 @@ import vmdk_utils
 import vmdk_ops
 import logging
 import auth_data_const
+import error_code
 
 AUTH_DB_PATH = '/etc/vmware/vmdkops/auth-db'
 
@@ -32,7 +33,6 @@ def all_columns_set(privileges):
         
         all_columns = [
                         auth_data_const.COL_DATASTORE,
-                        auth_data_const.COL_GLOBAL_VISIBILITY,
                         auth_data_const.COL_CREATE_VOLUME,
                         auth_data_const.COL_DELETE_VOLUME,
                         auth_data_const.COL_MOUNT_VOLUME,
@@ -171,7 +171,7 @@ class DockerVolumeTenant:
             conn.execute(
                 """
                 INSERT OR IGNORE INTO privileges VALUES
-                (:tenant_id, :datastore, :global_visibility, :create_volume,
+                (:tenant_id, :datastore, :create_volume,
                 :delete_volume, :mount_volume, :max_volume_size, :usage_quota)
                 """,
                 privileges
@@ -191,14 +191,12 @@ class DockerVolumeTenant:
 
             Example:
             privileges = [{'datastore': 'datastore1',
-                           'global_visibility': 0,
                            'create_volume': 0,
                            'delete_volume': 0,
                            'mount_volume': 1,
                            'max_volume_size': 0,
                            'usage_quota': 0},
                           {'datastore': 'datastore2',
-                           'global_visibility': 0,
                            'create_volume': 1,
                            'delete_volume': 1,
                            'mount_volume': 1,
@@ -216,7 +214,7 @@ class DockerVolumeTenant:
             conn.executemany(
                 """
                 INSERT OR IGNORE INTO privileges VALUES
-                (:tenant_id, :datastore, :global_visibility, :create_volume,
+                (:tenant_id, :datastore, :create_volume,
                 :delete_volume, :mount_volume, :max_volume_size, :usage_quota)
                 """,
                 privileges
@@ -227,7 +225,7 @@ class DockerVolumeTenant:
                 # each dict represent a privilege that the tenant has for a given datastore
                 # for each dict, add a new element which maps 'tenant_id' to tenant_id 
                 p[auth_data_const.COL_TENANT_ID] = tenant_id
-                column_list = ['tenant_id', 'datastore', 'global_visibility', 'create_volume',
+                column_list = ['tenant_id', 'datastore', 'create_volume',
                                 'delete_volume', 'mount_volume', 'max_volume_size', 'usage_quota']
                 update_list = []
                 update_list = [p[col] for col in column_list]    
@@ -241,7 +239,6 @@ class DockerVolumeTenant:
                     UPDATE OR IGNORE privileges SET
                         tenant_id = ?, 
                         datastore = ?, 
-                        global_visibility = ?,
                         create_volume = ?,
                         delete_volume = ?,
                         mount_volume = ?,
@@ -398,8 +395,6 @@ class AuthorizationDataManager:
                 tenant_id TEXT NOT NULL,
                 -- datastore name
                 datastore TEXT NOT NULL,
-                -- not use currently, will drop this field later
-                global_visibility INTEGER,
                 create_volume INTEGER,
                 delete_volume INTEGER,
                 mount_volume INTEGER,
@@ -449,8 +444,8 @@ class AuthorizationDataManager:
         logging.debug ("create_tenant name=%s", name)
         error_info, exist_tenant = self.get_tenant(name)
         if exist_tenant:
-            error_info = "Tenant {0} already exists".format(name)
-            logging.warning("Tenant %s already exists", name)
+            error_info = error_code.TENANT_ALREADY_EXIST.format(name)
+            logging.warning(error_info)
             return error_info, exist_tenant
             
         if default_privileges:
@@ -490,7 +485,7 @@ class AuthorizationDataManager:
                 self.conn.execute(
                     """
                     INSERT INTO privileges VALUES
-                    (:tenant_id, :datastore, :global_visibility, :create_volume,
+                    (:tenant_id, :datastore, :create_volume,
                     :delete_volume, :mount_volume, :max_volume_size, :usage_quota)
                     """,
                     default_privileges
@@ -502,7 +497,7 @@ class AuthorizationDataManager:
                 self.conn.executemany(
                     """
                     INSERT INTO privileges VALUES
-                    (:tenant_id, :datastore, :global_visibility, :create_volume,
+                    (:tenant_id, :datastore, :create_volume,
                     :delete_volume, :mount_volume, :max_volume_size, :usage_quota)
                     """,
                     privileges

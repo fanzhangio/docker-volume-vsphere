@@ -288,7 +288,7 @@ class VmdkCreateCloneRemoveTestCase(unittest.TestCase):
                                   vol_name=self.volName1,
                                   opts=self.badOpts,
                                   vm_uuid=self.vm_uuid,
-                                  vm_datastore=self.vm_datastore)
+                                  datastore=self.vm_datastore)
         self.assertNotEqual(err, None, err)
 
         err = vmdk_ops.removeVMDK(self.name1)
@@ -309,7 +309,7 @@ class VmdkCreateCloneRemoveTestCase(unittest.TestCase):
                                   vol_name=self.volName1,
                                   opts={volume_kv.CLONE_FROM: self.volName},
                                   vm_uuid=self.vm_uuid,
-                                  vm_datastore=self.vm_datastore)
+                                  datastore=self.vm_datastore)
         self.assertEqual(err, None, err)
 
         err = vmdk_ops.createVMDK(vmdk_path=self.name2,
@@ -317,7 +317,7 @@ class VmdkCreateCloneRemoveTestCase(unittest.TestCase):
                                   vol_name=self.volName2,
                                   opts={volume_kv.CLONE_FROM: self.volName1},
                                   vm_uuid=self.vm_uuid,
-                                  vm_datastore=self.vm_datastore)
+                                  datastore=self.vm_datastore)
         self.assertEqual(err, None, err)
 
         err = vmdk_ops.createVMDK(vmdk_path=self.name3,
@@ -325,7 +325,7 @@ class VmdkCreateCloneRemoveTestCase(unittest.TestCase):
                                   vol_name=self.volName3,
                                   opts={volume_kv.CLONE_FROM: self.volName2},
                                   vm_uuid=self.vm_uuid,
-                                  vm_datastore=self.vm_datastore)
+                                  datastore=self.vm_datastore)
         self.assertEqual(err, None, err)
 
         err = vmdk_ops.removeVMDK(self.name)
@@ -387,11 +387,14 @@ class ValidationTestCase(unittest.TestCase):
                 vmdk_ops.validate_opts(opts, self.path)
 
 def create_vm(si, vm_name, datastore):
+        """ Create a VM """
         content = si.RetrieveContent()
         datacenter = content.rootFolder.childEntity[0]
         vm_folder = datacenter.vmFolder
         hosts = datacenter.hostFolder.childEntity
         resource_pool = hosts[0].resourcePool
+        logging.info("datacenter={0} vm_folder={1} hosts={2} resource_pool={3}".format(datacenter, vm_folder,
+                                                                                       hosts, resource_pool))
 
         datastore_path = '[' + datastore + '] ' + vm_name
 
@@ -427,19 +430,18 @@ def create_vm(si, vm_name, datastore):
             self.assertFalse(True) 
     
 def remove_vm(si, vm_name):
-
-    vm = [d for d in si.content.rootFolder.childEntity[0].vmFolder.childEntity 
-            if d.config.name == vm_name]
+    """ Remove a VM """
+    vm = vmdk_utils.find_vm_by_name(vm_name)
     if vm:
         logging.debug("Found: VM %s", vm_name)
         #logging.debug("The current powerState is  : %s", format(vm[0].runtime.powerState)))
-        if vm[0].runtime.powerState == vim.VirtualMachinePowerState.poweredOn:
+        if vm.runtime.powerState == vim.VirtualMachinePowerState.poweredOn:
             logging.debug("Attempting to power off %s", vm_name)
-            task = vm[0].PowerOffVM_Task()
+            task = vm.PowerOffVM_Task()
             vmdk_ops.wait_for_tasks(si, [task])
         
         logging.debug("Trying to destroy VM %s", vm_name)    
-        task = vm[0].Destroy_Task()
+        task = vm.Destroy_Task()
         vmdk_ops.wait_for_tasks(si, [task])
 
 class VmdkAttachDetachTestCase(unittest.TestCase):
@@ -546,6 +548,8 @@ class VmdkAuthorizeTestCase(unittest.TestCase):
     tenant1 = None
         
     def setUp(self):
+        """ Setup run before each test """
+        logging.info("VMDKAuthorizeTest setUp path =%s", path)
         self.auth_mgr = auth_data.AuthorizationDataManager()
         self.auth_mgr.connect()
 
@@ -560,20 +564,21 @@ class VmdkAuthorizeTestCase(unittest.TestCase):
              self.assertEqual(error_info, None)
 
     def tearDown(self):
+        logging.info("VMDKAuthorizeTest tearDown path =%s", path)
         self.cleanup()
        
     def test_vmdkop_authorize(self):
+        """ Test vmdkop authorize """
         vm_ds = 'datastore1'
         vms = [(self.vm_uuid, self.vm_name)]
         privileges = []
         default_datastore='default_ds'
         default_privileges = {'datastore': default_datastore,
-                        'global_visibility': 0,
-                        'create_volume': 0,
-                        'delete_volume': 0,
-                        'mount_volume': 0,
-                        'max_volume_size': 0,
-                        'usage_quota': 0}
+                              'create_volume': 0,
+                              'delete_volume': 0,
+                              'mount_volume': 0,
+                              'max_volume_size': 0,
+                              'usage_quota': 0}
                 
         error_info, tenant1 = self.auth_mgr.create_tenant('vmdk_auth_test', 'Tenant used to vmdk_auth_test', default_datastore,
                                               default_privileges, vms, privileges)
@@ -581,12 +586,11 @@ class VmdkAuthorizeTestCase(unittest.TestCase):
         self.assertTrue(uuid.UUID(tenant1.id))
         # test CMD_CREATE without "create_volume" set
         privileges = [{'datastore': vm_ds,
-                        'global_visibility': 0,
-                        'create_volume': 0,
-                        'delete_volume': 0,
-                        'mount_volume': 1,
-                        'max_volume_size': 500,
-                        'usage_quota': 1000}]
+                       'create_volume': 0,
+                       'delete_volume': 0,
+                       'mount_volume': 1,
+                       'max_volume_size': 500,
+                       'usage_quota': 1000}]
         
         error_info = tenant1.set_datastore_access_privileges(self.auth_mgr.conn, privileges)
         self.assertEqual(error_info, None)
@@ -596,12 +600,11 @@ class VmdkAuthorizeTestCase(unittest.TestCase):
 
         # set "create_volume" privilege to true 
         privileges = [{'datastore': vm_ds,
-                        'global_visibility': 0,
-                        'create_volume': 1,
-                        'delete_volume': 0,
-                        'mount_volume': 1,
-                        'max_volume_size': 500,
-                        'usage_quota': 1000}]
+                       'create_volume': 1,
+                       'delete_volume': 0,
+                       'mount_volume': 1,
+                       'max_volume_size': 500,
+                       'usage_quota': 1000}]
 
         error_info = tenant1.set_datastore_access_privileges(self.auth_mgr.conn, privileges)
         self.assertEqual(error_info, None)
@@ -634,12 +637,11 @@ class VmdkAuthorizeTestCase(unittest.TestCase):
         self.assertEqual(error_info, "No delete privilege")
 
         privileges = [{'datastore': vm_ds,
-                        'global_visibility': 0,
-                        'create_volume': 1,
-                        'delete_volume': 1,
-                        'mount_volume': 1,
-                        'max_volume_size': 500,
-                        'usage_quota': 1000}]
+                       'create_volume': 1,
+                       'delete_volume': 1,
+                       'mount_volume': 1,
+                       'max_volume_size': 500,
+                       'usage_quota': 1000}]
 
         error_info = tenant1.set_datastore_access_privileges(self.auth_mgr.conn, privileges)
         self.assertEqual(error_info, None)
@@ -654,7 +656,7 @@ class VmdkAuthorizeTestCase(unittest.TestCase):
         self.assertEqual(error_info, None)
 
 class VmdkTenantTestCase(unittest.TestCase):
-    """Unit test for VMDK ops for multi-tenancy"""
+    """ Unit test for VMDK ops for multi-tenancy """
     non_tenant_vol_name = "non_tenant_vol1"
 
     # tenant1 info
@@ -679,18 +681,20 @@ class VmdkTenantTestCase(unittest.TestCase):
 
     def setUp(self):
         """ Setup run before each test """
-        logging.debug("VMDKTenantTest setUp path =%s", path)
+        logging.info("VMDKTenantTest setUp path =%s", path)
         
         if (not self.datastore_name):
             datastores = vmdk_utils.get_datastores()
-            datastore = datastores[0]
-            if (not datastore):
+            if datastores:
+                datastore = datastores[0]
+                self.datastore_name = datastore[0]
+                self.datastore_path = datastore[2]
+                logging.debug("datastore_name=%s datastore_path=%s", self.datastore_name,
+                                                                     self.datastore_path)
+            else:
                 logging.error("Cannot find a valid datastore")
                 self.assertFalse(True)
-            self.datastore_name = datastore[0]
-            self.datastore_path = datastore[2]
-            logging.debug("datastore_name=%s datastore_path=%s", self.datastore_name,
-                                                                 self.datastore_path)   
+
         self.cleanup()
         # get service_instance, and create VMs
         si = vmdk_ops.get_si()
@@ -736,7 +740,7 @@ class VmdkTenantTestCase(unittest.TestCase):
           
     def tearDown(self):
         """ Cleanup after each test """
-        logging.debug("VMDKTenantTest  tearDown path")
+        logging.info("VMDKTenantTest  tearDown path")
         self.cleanup()      
             
     def cleanup(self):
@@ -761,6 +765,7 @@ class VmdkTenantTestCase(unittest.TestCase):
         remove_vm(si, self.vm2_name)
        
     def test_create_and_remove_volume_on_non_tenant_vm(self):
+        """ Test volume create remove on a VM which does not belong to any tenant """
         vm1_uuid = vmdk_utils.get_vm_uuid_by_name(self.vm1_name)
 
         # run create command
@@ -773,6 +778,7 @@ class VmdkTenantTestCase(unittest.TestCase):
         self.assertEqual(None, error_info)
     
     def test_vmdkops_on_tenant_vm(self):
+        """ Test vmdk life cycle on a VM which belongs to a tenant """
         vm1_uuid = vmdk_utils.get_vm_uuid_by_name(self.vm1_name)
         # add vm to tenant
         error_info = auth_api._tenant_vm_add(
@@ -849,7 +855,7 @@ class VmdkTenantTestCase(unittest.TestCase):
 
         # list volumes
         opts = {}
-        result = vmdk_ops.executeRequest(vm1_uuid, self.vm1_name, self.vm1_config_path, auth.CMD_LIST, None, opts)
+        result = vmdk_ops.executeRequest(vm1_uuid, self.vm1_name, self.vm1_config_path, 'list', None, opts)
        
         # result should have two volumes :tenant1_vol2, and  tenant1_vol3
         self.assertEqual(2, len(result))
@@ -857,6 +863,7 @@ class VmdkTenantTestCase(unittest.TestCase):
         self.assertEqual("tenant1_vol3", result[1]['Name'])
     
     def test_vmdkops_on_different_tenants(self):
+        """ Test vmdkops on VMs which belong to different tenant """
         # add vm1 to tenant1
         vm1_uuid = vmdk_utils.get_vm_uuid_by_name(self.vm1_name)
         error_info = auth_api._tenant_vm_add(
@@ -921,7 +928,7 @@ class VmdkTenantTestCase(unittest.TestCase):
         
         # list volumes for tenant1
         opts = {}
-        result = vmdk_ops.executeRequest(vm1_uuid, self.vm1_name, self.vm1_config_path, auth.CMD_LIST, None, opts)
+        result = vmdk_ops.executeRequest(vm1_uuid, self.vm1_name, self.vm1_config_path, 'list', None, opts)
        
         self.assertEqual(3, len(result))
         self.assertEqual("tenant1_vol1", result[0]['Name'])
@@ -930,7 +937,7 @@ class VmdkTenantTestCase(unittest.TestCase):
 
         # list volumes for tenant2
         opts = {}
-        result = vmdk_ops.executeRequest(vm2_uuid, self.vm2_name, self.vm2_config_path, auth.CMD_LIST, None, opts)
+        result = vmdk_ops.executeRequest(vm2_uuid, self.vm2_name, self.vm2_config_path, 'list', None, opts)
        
         self.assertEqual(3, len(result))
         self.assertEqual("tenant2_vol1", result[0]['Name'])

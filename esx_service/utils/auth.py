@@ -23,12 +23,11 @@ import auth_data_const
 import volume_kv as kv
 import threadutils
 
-# All supported vmdk commands
+# All supported vmdk commands that need authorization checking
 CMD_CREATE = 'create'
 CMD_REMOVE = 'remove'
 CMD_ATTACH = 'attach'
 CMD_DETACH = 'detach'
-CMD_LIST = 'list'
 
 SIZE = 'size'
 
@@ -44,7 +43,15 @@ def get_auth_mgr():
     return thread_local._auth_mgr
 
 def get_tenant(vm_uuid):
-    """ Get tenant which owns this VM by querying the auth DB. """
+    """ 
+        Get tenant which owns this VM by querying the auth DB.
+        Return value:
+        -- error_info: return None on success or error info on failure
+        -- tenant_uuid: return tenant uuid which the VM with given vm_uuid is associated to, 
+           return None if the VM is not associated to any tenant
+        -- tenant_name: return tenant name which the VM with given vm_uuid is associated to,
+           return None if the VM is not associated to any tenant
+    """
     _auth_mgr = get_auth_mgr()
     try:
         cur = _auth_mgr.conn.execute(
@@ -82,6 +89,10 @@ def get_tenant(vm_uuid):
 def get_privileges(tenant_uuid, datastore):
     """ Return privileges for given (tenant_uuid, datastore) pair by
         querying the auth DB.
+        Return value:
+        -- error_info: return None on success or error info on failure
+        -- privilegs: return a list of privileges for given (tenant_uuid, datastore)
+           return None on failure 
     """
     _auth_mgr = get_auth_mgr()
     privileges = []
@@ -135,6 +146,11 @@ def check_max_volume_size(opts, privileges):
 def get_total_storage_used(tenant_uuid, datastore):
     """ Return total storage used by (tenant_uuid, datastore)
         by querying auth DB.
+
+        Return value:
+        -- error_info: return None on success or error info on failure
+        -- total_storage_used: return total storage used for given (tenant_uuid, datastore)
+                               return None on failure
 
     """
     _auth_mgr = get_auth_mgr()
@@ -308,7 +324,10 @@ def authorize(vm_uuid, datastore, cmd, opts):
         return result, tenant_uuid, tenant_name
 
 def add_volume_to_volumes_table(tenant_uuid, datastore, vol_name, vol_size_in_MB):
-    """ Insert volume to volumes table. """
+    """ 
+        Insert volume to volumes table.
+        Return None on success or error string. 
+    """
     _auth_mgr = get_auth_mgr()
 
     logging.debug("add to volumes table(%s %s %s %s)", tenant_uuid, datastore,
@@ -327,7 +346,10 @@ def add_volume_to_volumes_table(tenant_uuid, datastore, vol_name, vol_size_in_MB
     return None
 
 def remove_volume_from_volumes_table(tenant_uuid, datastore, vol_name):
-    """ Remove volume from volumes table. """
+    """ 
+        Remove volume from volumes table.
+        Return None on success or error string. 
+    """
     _auth_mgr = get_auth_mgr()
 
     logging.debug("remove volumes from volumes table(%s %s %s)", tenant_uuid, datastore,
@@ -346,7 +368,14 @@ def remove_volume_from_volumes_table(tenant_uuid, datastore, vol_name):
     return None
 
 def get_row_from_tenants_table(conn, tenant_uuid):
-    """ Get a row from tenants table for a given tenant """
+    """ 
+        Get a row from tenants table for a given tenant.
+
+        Return value:
+        -- error_info: return None on success or error string
+        -- result: returns a row in tenants table with given tenant_uuid on success, 
+           return None on failure 
+    """
 
     try:
         cur = conn.execute(
@@ -362,7 +391,14 @@ def get_row_from_tenants_table(conn, tenant_uuid):
     return None, result
 
 def get_row_from_vms_table(conn, tenant_uuid):
-    """ Get rows from vms table for a given tenant """
+    """ 
+        Get rows from vms table for a given tenant.
+
+        Return value:
+        -- error_info: return None on success or error string
+        -- result: returns rows in vms table with given tenant_uuid on success, 
+           return None on failure  
+    """
 
     try:
         cur = conn.execute(
@@ -377,7 +413,14 @@ def get_row_from_vms_table(conn, tenant_uuid):
     return None, result
 
 def get_row_from_privileges_table(conn, tenant_uuid):
-    """ Get rows from privileges table for a given tenant """
+    """ 
+        Get rows from privileges table for a given tenant
+
+        Return value:
+        -- error_info: return None on success or error string
+        -- result: returns rows in privileges table with given tenant_uuid on success, 
+           return None on failure 
+    """
 
     try:
         cur = conn.execute(

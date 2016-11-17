@@ -3,16 +3,24 @@ import auth_data_const
 import convert
 import auth_data
 import vmdk_utils
+import error_code
 
 def get_auth_mgr():
+    """ Get a connection to auth DB. """
     try:
         auth_mgr = auth.get_auth_mgr()
-    except auth_data.DbConnectionError, e:
+    except auth_data.DbConnectionError as e:
         error_info = "Failed to connect auth DB({0})".format(e)
         return error_info, None
     return None, auth_mgr
 
 def get_tenant_from_db(name):
+    """
+        Get a tenant object with given name
+        Return value:
+        -- error_info: return None on success or error info on failure
+        -- tenant: return tenant object on success or None on failure 
+    """
     error_info, auth_mgr = get_auth_mgr()
     if error_info:
         return error_info, None
@@ -21,19 +29,31 @@ def get_tenant_from_db(name):
     return error_info, tenant
 
 def create_tenant_in_db(name, description, default_datastore, default_privileges, vms, privileges):
+    """
+        Create a tenant object in DB
+        Return value:
+        -- error_info: return None on success or error info on failure
+        -- tenant: return tenant object on success or None on failure
+    """
     error_info, auth_mgr = get_auth_mgr()
     if error_info:
         return error_info, None
 
-    error_info, tenant = auth_mgr.create_tenant(name = name, 
-                                                description = description, 
-                                                default_datastore = default_datastore, 
-                                                default_privileges = default_privileges, 
-                                                vms = vms, 
-                                                privileges = privileges)
+    error_info, tenant = auth_mgr.create_tenant(name=name, 
+                                                description=description, 
+                                                default_datastore=default_datastore, 
+                                                default_privileges=default_privileges, 
+                                                vms=vms, 
+                                                privileges=privileges)
     return error_info, tenant
 
 def get_tenant_list_from_db():
+    """
+        List all tenants
+        Return value:
+        -- error_info: return None on success or error info on failure
+        -- tenant_list: return a list of tenant objects on success or None on failure
+    """
     error_info, auth_mgr = get_auth_mgr()
     if error_info:
         return error_info, None
@@ -44,26 +64,33 @@ def get_tenant_list_from_db():
 def generate_tuple_from_vm_list(vm_list):
     """ Generate a list of (vm_uuid, vm_name) pair """
     if not vm_list:
-        return None, []
+        return None, [], []
     vms = []
+    error_info = ""
+    not_found_vms = []
     for vm_name in vm_list:
         vm_uuid = vmdk_utils.get_vm_uuid_by_name(vm_name)
         if not vm_uuid:
-            error_info =  "Cannot find vm_uuid for vm {0}, tenant_create failed".format(vm_name)
-            return error_info, None
+            err =  "Cannot find vm_uuid for vm {0} ".format(vm_name)
+            if err:
+                error_info = error_info + err
+                not_found_vms.append(vm_name) 
         vms.append((vm_uuid, vm_name))
     
-    return None, vms
+    if error_info:
+        return error_info, vms, not_found_vms
+    
+    return None, vms, not_found_vms
 
 def default_privileges():
-     privileges = [{'datastore': 'datastore1',
-                     'global_visibility': 0,
-                      'create_volume': 0,
-                      'delete_volume': 0,
-                     'mount_volume': 0,
-                      'max_volume_size': 0,
-                      'usage_quota': 0}]
-     return privileges
+    """ return a privilege object with default value """
+    privileges = [{'datastore': '',
+                   'create_volume': 0,
+                   'delete_volume': 0,
+                   'mount_volume': 0,
+                   'max_volume_size': 0,
+                   'usage_quota': 0}]
+    return privileges
 
 def set_privileges(rights, privileges, value):
     """ set or unset privileges based rights passed by command line """
@@ -118,33 +145,33 @@ def modify_privileges(privileges, add_rights, rm_rights, volume_maxsize, volume_
     return privileges
 
 def generate_privileges_dict(privileges):
+    """ convert privileges list into privileges dict """
     # privileges is a list which is read from auth DB
     # it has the following format
-    # (tenant_uuid, datastore, global_visibility, create_volume, delete_volume,
+    # (tenant_uuid, datastore, create_volume, delete_volume,
     # mount_volume, max_volume_size, usage_quota)
     privileges_dict = {}
     privileges_dict[auth_data_const.COL_DATASTORE] = privileges[1]
-    privileges_dict[auth_data_const.COL_GLOBAL_VISIBILITY] = privileges[2]
-    privileges_dict[auth_data_const.COL_CREATE_VOLUME] = privileges[3]
-    privileges_dict[auth_data_const.COL_DELETE_VOLUME] = privileges[4]
-    privileges_dict[auth_data_const.COL_MOUNT_VOLUME] = privileges[5]
-    privileges_dict[auth_data_const.COL_MAX_VOLUME_SIZE] = privileges[6]
-    privileges_dict[auth_data_const.COL_USAGE_QUOTA] = privileges[7]
+    privileges_dict[auth_data_const.COL_CREATE_VOLUME] = privileges[2]
+    privileges_dict[auth_data_const.COL_DELETE_VOLUME] = privileges[3]
+    privileges_dict[auth_data_const.COL_MOUNT_VOLUME] = privileges[4]
+    privileges_dict[auth_data_const.COL_MAX_VOLUME_SIZE] = privileges[5]
+    privileges_dict[auth_data_const.COL_USAGE_QUOTA] = privileges[6]
     return privileges_dict
 
 def _tenant_create(name, description, default_datastore, default_privileges, vm_list, privileges):
     """ API to create a tenant """
-    error_info, vms = generate_tuple_from_vm_list(vm_list)
+    error_info, vms, not_found_vms = generate_tuple_from_vm_list(vm_list)
     if error_info:
         return error_info, None
     
     error_info, tenant = create_tenant_in_db(
-                                             name = name, 
-                                             description = description, 
-                                             default_datastore = default_datastore, 
-                                             default_privileges = default_privileges, 
-                                             vms = vms, 
-                                             privileges = privileges)
+                                             name=name, 
+                                             description=description, 
+                                             default_datastore=default_datastore, 
+                                             default_privileges=default_privileges, 
+                                             vms=vms, 
+                                             privileges=privileges)
     if error_info:
         return error_info, None
     
@@ -158,7 +185,7 @@ def _tenant_rm(name, remove_volumes):
         return error_info
     
     if not tenant:
-        error_info = "Tenant {0} does not exist".format(name)
+        error_info = error_code.TENANT_NOT_EXIST.format(name)
         return error_info
     
     error_info, auth_mgr = get_auth_mgr()
@@ -169,6 +196,7 @@ def _tenant_rm(name, remove_volumes):
     return error_info
 
 def _tenant_ls():
+    """ API to list all tenants """
     error_info, tenant_list = get_tenant_list_from_db()
     return error_info, tenant_list
 
@@ -179,10 +207,10 @@ def _tenant_vm_add(name, vm_list):
         return error_info
     
     if not tenant:
-        error_info = "Tenant {0} does not exist".format(name)
+        error_info = error_code.TENANT_NOT_EXIST.format(name)
         return error_info
 
-    error_info, vms = generate_tuple_from_vm_list(vm_list)
+    error_info, vms, not_found_vms = generate_tuple_from_vm_list(vm_list)
     if error_info:
         return error_info
     
@@ -200,10 +228,10 @@ def _tenant_vm_rm(name, vm_list):
         return error_info
     
     if not tenant:
-        error_info = "Tenant {0} does not exist".format(name)
+        error_info = error_code.TENANT_NOT_EXIST.format(name)
         return error_info
 
-    error_info, vms = generate_tuple_from_vm_list(vm_list)
+    error_info, vms, not_found_vms = generate_tuple_from_vm_list(vm_list)
     
     if error_info:
         return error_info
@@ -223,7 +251,7 @@ def _tenant_vm_ls(name):
         return error_info, None
     
     if not tenant:
-        error_info = "Tenant {0} does not exist".format(name)
+        error_info = error_code.TENANT_NOT_EXIST.format(name)
         return error_info, None
    
     return None, tenant.vms
@@ -235,7 +263,7 @@ def _tenant_access_add(name, datastore, rights, volume_maxsize, volume_totalsize
         return error_info
 
     if not tenant:
-        error_info = "Tenant {0} does not exist".format(name)
+        error_info = error_code.TENANT_NOT_EXIST.format(name)
         return error_info
 
     privileges = generate_privileges(datastore, rights, volume_maxsize, volume_totalsize)
@@ -254,7 +282,7 @@ def _tenant_access_set(name, datastore, add_rights, rm_rights, volume_maxsize, v
         return error_info
 
     if not tenant:
-        error_info = "Tenant {0} does not exist".format(name)
+        error_info = error_code.TENANT_NOT_EXIST.format(name)
         return error_info
 
     privileges = [d for d in tenant.privileges if d[auth_data_const.COL_DATASTORE] == datastore]
@@ -280,7 +308,7 @@ def _tenant_access_rm(name, datastore):
         return error_info
     
     if not tenant:
-        error_info = "Tenant {0} does not exist".format(name)
+        error_info = error_code.TENANT_NOT_EXIST.format(name)
         return error_info
     
     error_info, auth_mgr = get_auth_mgr()
@@ -297,7 +325,7 @@ def _tenant_access_ls(name):
         return error_info, None
     
     if not tenant:
-        error_info = "Tenant {0} does not exist".format(name)
+        error_info = error_code.TENANT_NOT_EXIST.format(name)
         return error_info
 
     return None, tenant.privileges 
