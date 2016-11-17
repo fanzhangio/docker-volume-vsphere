@@ -94,8 +94,8 @@ define([], function() {
         displayName: 'Mount Volumes'
       },
       {
-        field: 'remove_volumes',
-        displayName: 'Remove Volumes'
+        field: 'delete_volumes',
+        displayName: 'Delete Volumes'
       },
       {
         field: 'max_volume_size',
