@@ -97,11 +97,7 @@ define([], function() {
       makeStatusColDef(), {
         displayName: 'Used space',
         field: 'storageUsageFormatted',
-        width: '15%'
-      }, {
-        field: 'id',
-        displayName: 'ID',
-        width: '15%'
+        width: '30%'
       }];
     }
 
