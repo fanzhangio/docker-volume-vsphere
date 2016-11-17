@@ -46,7 +46,23 @@ define([], function() {
                   DialogService.showDialog('dvol.edit-datastore', {
                     permissions: firstDatastore.permissions,
                     save: function(editedPermissions) {
-                      DvolTenantService.updateDatastore(selectedTenant.id, { datastore: firstDatastore.datastore, permissions: editedPermissions })
+                      DvolTenantService.updateDatastore(
+                        selectedTenant.id,
+                        {
+                          datastore: firstDatastore.datastore,
+                          permissions: editedPermissions
+                        },
+                        //
+                        // a bit of a hack here
+                        // originally the UI expected an API that received a new permission set
+                        // as the way to update a datastore
+                        //
+                        // the actual API uses an add_rights & remove_right approach to modifying
+                        // the create, remove, mount permissions
+                        //
+                        // so we pass down the original permissions so the "deltas" can be figured out
+                        //
+                        firstDatastore.permissions)
                         .then(datastoresGrid.refresh);
                     }
                   });
