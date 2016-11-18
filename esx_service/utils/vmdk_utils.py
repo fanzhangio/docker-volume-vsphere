@@ -233,13 +233,6 @@ def get_vm_uuid_by_name(vm_name):
     except:
         return None
 
-def get_datastore_path_by_name(ds_name):
-    """ Return path of datastore with given datastore name """
-    for (datastore, url_name, path) in get_datastores():
-        if datastore == ds_name:
-            return path
-    return None
-
 def get_vm_config_path(vm_name):
     """Returns vm_uuid for given vm_name, or None """
     si = vmdk_ops.get_si()
@@ -252,7 +245,7 @@ def get_vm_config_path(vm_name):
      # config path has the format like this "[datastore1] test_vm1/test_vm1/test_vm1.vmx"
     datastore, path = config_path.split()
     datastore = datastore[1:-1]
-    datastore_path = get_datastore_path_by_name(datastore)
+    datastore_path = os.path.join("/vmfs/volumes/", datastore)
     # datastore_path has the format like this /vmfs/volumes/57302fae-961b9cf9-2e49-000c29acb565/dockvols
     # remove /dockvols from the datastore_path
     datastore_path = datastore_path[:-9]
