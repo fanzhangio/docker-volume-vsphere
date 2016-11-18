@@ -763,12 +763,12 @@ def create_tenant_in_db(name, description, default_datastore, default_privileges
     if error_info:
         return error_info, None
 
-    error_info, tenant = auth_mgr.create_tenant(name = name, 
-                                                description = description, 
-                                                default_datastore = default_datastore, 
-                                                default_privileges = default_privileges, 
-                                                vms = vms, 
-                                                privileges = privileges)
+    error_info, tenant = auth_mgr.create_tenant(name=name, 
+                                                description=description, 
+                                                default_datastore=default_datastore, 
+                                                default_privileges=default_privileges, 
+                                                vms=vms, 
+                                                privileges=privileges)
     return error_info, tenant
 
 def get_tenant_list_from_db():

@@ -36,7 +36,8 @@ import uuid
 import auth
 import auth_data
 import auth_api
-
+import error_code
+import vmdk_utils
 
 # Max volumes count we can attach to a singe VM.
 MAX_VOL_COUNT_FOR_ATTACH = 60
@@ -417,18 +418,20 @@ def create_vm(si, vm_name, datastore):
         task = vm_folder.CreateVM_Task(config=config, pool=resource_pool)
         vmdk_ops.wait_for_tasks(si, [task])
 
-        vm = [d for d in si.content.rootFolder.childEntity[0].vmFolder.childEntity 
-              if d.config.name == vm_name]
+        vm = vmdk_utils.find_vm_by_name(vm_name)
         if vm:
             logging.debug("Found: VM %s", vm_name)
-            if vm[0].runtime.powerState == vim.VirtualMachinePowerState.poweredOff:
+            if vm.runtime.powerState == vim.VirtualMachinePowerState.poweredOff:
                 logging.debug("Attempting to power on %s", vm_name)
-                task = vm[0].PowerOnVM_Task()
+                task = vm.PowerOnVM_Task()
                 vmdk_ops.wait_for_tasks(si, [task])
         else:
+            error_info = error_code.VM_NOT_FOUND.format(vm_name)
             logging.error("Cannot find the test-vm")
-            self.assertFalse(True) 
-    
+            return error_info
+        
+        return None
+               
 def remove_vm(si, vm_name):
     """ Remove a VM """
     vm = vmdk_utils.find_vm_by_name(vm_name)
@@ -443,6 +446,52 @@ def remove_vm(si, vm_name):
         logging.debug("Trying to destroy VM %s", vm_name)    
         task = vm.Destroy_Task()
         vmdk_ops.wait_for_tasks(si, [task])
+
+class ValidationTestCase(unittest.TestCase):
+    """ Test validation of -o options on create """
+
+    @unittest.skipIf(not vsan_info.get_vsan_datastore(),
+                     "VSAN is not found - skipping vsan_info tests")
+
+    def setUp(self):
+        """ Create a bunch of policies """
+        self.policy_names = ['name1', 'name2', 'name3']
+        self.policy_content = ('(("proportionalCapacity" i50) '
+                               '("hostFailuresToTolerate" i0))')
+        self.path = vsan_info.get_vsan_datastore().info.url
+        for n in self.policy_names:
+            result = vsan_policy.create(n, self.policy_content)
+            self.assertEquals(None, result,
+                              "failed creating policy %s (%s)" % (n, result))
+
+    def tearDown(self):
+        for n in self.policy_names:
+            try:
+                vsan_policy.delete(n)
+            except:
+                pass
+
+    def test_success(self):
+        sizes = ['2gb', '200tb', '200mb', '5kb']
+        sizes.extend([s.upper() for s in sizes])
+
+        for s in sizes:
+            for p in self.policy_names:
+                for d in volume_kv.VALID_ALLOCATION_FORMATS:
+                # An exception should not be raised
+                    vmdk_ops.validate_opts({volume_kv.SIZE: s, volume_kv.VSAN_POLICY_NAME: p, volume_kv.DISK_ALLOCATION_FORMAT : d},
+                                       self.path)
+                    vmdk_ops.validate_opts({volume_kv.SIZE: s}, self.path)
+                    vmdk_ops.validate_opts({volume_kv.VSAN_POLICY_NAME: p}, self.path)
+                    vmdk_ops.validate_opts({volume_kv.DISK_ALLOCATION_FORMAT: d}, self.path)
+
+    def test_failure(self):
+        bad = [{volume_kv.SIZE: '2'}, {volume_kv.VSAN_POLICY_NAME: 'bad-policy'},
+        {volume_kv.DISK_ALLOCATION_FORMAT: 'thiN'}, {volume_kv.SIZE: 'mb'}, {'bad-option': '4'}, {'bad-option': 'what',
+                                                             volume_kv.SIZE: '4mb'}]
+        for opts in bad:
+            with self.assertRaises(vmdk_ops.ValidationError):
+                vmdk_ops.validate_opts(opts, self.path)
 
 class VmdkAttachDetachTestCase(unittest.TestCase):
     """ Unit test for VMDK Attach and Detach ops """
@@ -474,7 +523,11 @@ class VmdkAttachDetachTestCase(unittest.TestCase):
         
         # get service_instance, and create a VM
         si = vmdk_ops.get_si()
-        create_vm(si, self.vm_name, self.datastore_name)
+        error = create_vm(si=si, 
+                          vm_name=self.vm_name, 
+                          datastore=self.datastore_name)
+        if error:
+            self.assertFalse(True)
 
         # create max_vol_count+1 VMDK files
         for id in range(1, self.max_vol_count + 2):
@@ -698,10 +751,19 @@ class VmdkTenantTestCase(unittest.TestCase):
         self.cleanup()
         # get service_instance, and create VMs
         si = vmdk_ops.get_si()
-        create_vm(si, self.vm1_name, self.datastore_name)
+        error = create_vm(si=si, 
+                          vm_name=self.vm1_name, 
+                          datastore=self.datastore_name)
+        if error:
+            self.assertFalse(True)
+
         self.vm1_config_path = vmdk_utils.get_vm_config_path(self.vm1_name)
 
-        create_vm(si, self.vm2_name, self.datastore_name)
+        error = create_vm(si=si, 
+                          vm_name=self.vm2_name, 
+                          datastore=self.datastore_name)
+        if error:
+            self.assertFalse(True)
         self.vm2_config_path = vmdk_utils.get_vm_config_path(self.vm2_name)
         
         # create tenant1 without adding any vms and privileges
@@ -747,7 +809,7 @@ class VmdkTenantTestCase(unittest.TestCase):
         # cleanup existing non-tenant volume
         if not self.datastore_path:
             vmdk_path = vmdk_utils.get_vmdk_path(self.datastore_path, self.non_tenant_vol_name)
-            if vmdk_ops.getVMDK(vmdk_path, self.non_tenant_vol_name, self.datastore):
+            if vmdk_ops.getVMDK(vmdk_path, self.non_tenant_vol_name, self.datastore_name):
                 vmdk_ops.removeVMDK(vmdk_path)
 
         # cleanup existing tenant
