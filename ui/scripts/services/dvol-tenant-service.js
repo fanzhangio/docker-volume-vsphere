@@ -22,19 +22,10 @@ define([], function() {
     // DvolVmodlService.listVMsForTenant
     //
     function get(tenantId) {
-      var d = $q.defer();
-      setTimeout(function() {
-        var tenants = JSON.parse(localStorage.getItem('tenants')) || [];
-        var matches = tenants.filter(function(t) {
-          return t.id === tenantId;
-        });
-        var tenant = matches[0];
-        if (tenant) {
-          d.resolve(tenant);
-        }
-        setState(tenants);
-      }, 200);
-      return d.promise;
+      return getAll()
+      .then(function(tenants) {
+        return pickTenantById(tenantId, tenants);
+      });
     }
 
     //
