@@ -24,6 +24,7 @@ define([], function() {
     function get(tenantId) {
       return getAll()
       .then(function(tenants) {
+        setState(tenants);
         return pickTenantById(tenantId, tenants);
       });
     }
@@ -32,13 +33,6 @@ define([], function() {
     // DvolVmodlService.listTenants
     //
     function getAll() {
-      // var d = $q.defer();
-      // setTimeout(function() {
-      //   var tenants = JSON.parse(localStorage.getItem('tenants')) || [];
-      //   d.resolve(tenants);
-      //   setState(tenants);
-      // }, 200);
-      // return d.promise;
       return DvolVmodlService.listTenants()
       .then(function(tenants) {
         tenants.forEach(function(t,i) {
@@ -86,20 +80,6 @@ define([], function() {
     // DvolVmodlService.addVMsToTenant
     //
     function add(tenant, vms) {
-      // var d = $q.defer();
-      // setTimeout(function() {
-      //   tenant.id = generateId();
-      //   tenant.vms = (vms || []).map(function(vm) {
-      //     return vm.id;
-      //   });
-      //   tenant.datastores = {};
-      //   var tenants = JSON.parse(localStorage.getItem('tenants')) || [];
-      //   tenants.push(tenant);
-      //   localStorage.setItem('tenants', JSON.stringify(tenants));
-      //   d.resolve(tenants);
-      //   setState(tenants);
-      // }, 200);
-      // return d.promise;
       var tenantArgs = {
         name: tenant.name,
         description: tenant.description,
@@ -113,7 +93,9 @@ define([], function() {
         };
         return DvolVmodlService.addVMsToTenant(vmsArgs);
       })
-      .then(function() {
+      .then(getAll)
+      .then(function(tenants) {
+        setState(tenants);
         return tenant;
       });
     }
