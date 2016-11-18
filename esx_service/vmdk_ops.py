@@ -161,7 +161,7 @@ def RunCommand(cmd):
 # returns error, or None for OK
 # opts is  dictionary of {option: value}.
 # for now we care about size and (maybe) policy
-def createVMDK(vmdk_path, vm_name, vol_name, opts={}, tenant_uuid=None, datastore=None):
+def createVMDK(vmdk_path, vm_name, vol_name, opts={}, vm_uuid=None, tenant_uuid=None, datastore=None):
     logging.info("*** createVMDK: %s opts = %s", vmdk_path, opts)
     if os.path.isfile(vmdk_path):
         return err("File %s already exists" % vmdk_path)
@@ -173,7 +173,7 @@ def createVMDK(vmdk_path, vm_name, vol_name, opts={}, tenant_uuid=None, datastor
 
     if kv.CLONE_FROM in opts:
         return cloneVMDK(vm_name, vmdk_path, opts,
-                         vm_uuid, vm_datastore)
+                         vm_uuid, datastore)
 
     cmd = make_create_cmd(opts, vmdk_path)
     rc, out = RunCommand(cmd)

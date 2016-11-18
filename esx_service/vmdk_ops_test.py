@@ -447,52 +447,6 @@ def remove_vm(si, vm_name):
         task = vm.Destroy_Task()
         vmdk_ops.wait_for_tasks(si, [task])
 
-class ValidationTestCase(unittest.TestCase):
-    """ Test validation of -o options on create """
-
-    @unittest.skipIf(not vsan_info.get_vsan_datastore(),
-                     "VSAN is not found - skipping vsan_info tests")
-
-    def setUp(self):
-        """ Create a bunch of policies """
-        self.policy_names = ['name1', 'name2', 'name3']
-        self.policy_content = ('(("proportionalCapacity" i50) '
-                               '("hostFailuresToTolerate" i0))')
-        self.path = vsan_info.get_vsan_datastore().info.url
-        for n in self.policy_names:
-            result = vsan_policy.create(n, self.policy_content)
-            self.assertEquals(None, result,
-                              "failed creating policy %s (%s)" % (n, result))
-
-    def tearDown(self):
-        for n in self.policy_names:
-            try:
-                vsan_policy.delete(n)
-            except:
-                pass
-
-    def test_success(self):
-        sizes = ['2gb', '200tb', '200mb', '5kb']
-        sizes.extend([s.upper() for s in sizes])
-
-        for s in sizes:
-            for p in self.policy_names:
-                for d in volume_kv.VALID_ALLOCATION_FORMATS:
-                # An exception should not be raised
-                    vmdk_ops.validate_opts({volume_kv.SIZE: s, volume_kv.VSAN_POLICY_NAME: p, volume_kv.DISK_ALLOCATION_FORMAT : d},
-                                       self.path)
-                    vmdk_ops.validate_opts({volume_kv.SIZE: s}, self.path)
-                    vmdk_ops.validate_opts({volume_kv.VSAN_POLICY_NAME: p}, self.path)
-                    vmdk_ops.validate_opts({volume_kv.DISK_ALLOCATION_FORMAT: d}, self.path)
-
-    def test_failure(self):
-        bad = [{volume_kv.SIZE: '2'}, {volume_kv.VSAN_POLICY_NAME: 'bad-policy'},
-        {volume_kv.DISK_ALLOCATION_FORMAT: 'thiN'}, {volume_kv.SIZE: 'mb'}, {'bad-option': '4'}, {'bad-option': 'what',
-                                                             volume_kv.SIZE: '4mb'}]
-        for opts in bad:
-            with self.assertRaises(vmdk_ops.ValidationError):
-                vmdk_ops.validate_opts(opts, self.path)
-
 class VmdkAttachDetachTestCase(unittest.TestCase):
     """ Unit test for VMDK Attach and Detach ops """
 
