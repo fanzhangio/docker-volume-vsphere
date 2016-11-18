@@ -225,21 +225,23 @@ def strip_vmdk_extension(filename):
     return filename.replace(".vmdk", "")
 
 def get_vm_uuid_by_name(vm_name):
-    """Returns vm_uuid for given vm_name, or None"""
+    """ Returns vm_uuid for given vm_name, or None """
     si = vmdk_ops.get_si()
     try:
         vm = [d for d in si.content.rootFolder.childEntity[0].vmFolder.childEntity if d.config.name == vm_name]
         return vm[0].config.uuid
     except:
         return None
+
 def get_datastore_path(ds_name):
+    """ Return path of datastore with given datastore name """
     for (datastore, url_name, path) in get_datastores():
         if datastore == ds_name:
             return path
     return None
 
 def get_vm_config_path(vm_name):
-    """Returns vm_uuid for given vm_name, or None"""
+    """Returns vm_uuid for given vm_name, or None """
     si = vmdk_ops.get_si()
     try:
         vm = [d for d in si.content.rootFolder.childEntity[0].vmFolder.childEntity if d.config.name == vm_name]
@@ -258,6 +260,7 @@ def get_vm_config_path(vm_name):
     return vm_config_path
 
 def find_vm_by_name(vm_name):
+    """ Return vm for given vm_name, or None """
     si = vmdk_ops.get_si()
     try:
         vm = [d for d in si.content.rootFolder.childEntity[0].vmFolder.childEntity 

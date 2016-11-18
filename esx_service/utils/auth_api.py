@@ -1,9 +1,26 @@
+# Copyright 2016 VMware, Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License
+
+""" Provide APIs to tenant management """
+
 import auth
 import auth_data_const
 import convert
 import auth_data
 import vmdk_utils
 import error_code
+import logging
 
 def get_auth_mgr():
     """ Get a connection to auth DB. """
@@ -163,6 +180,8 @@ def _tenant_create(name, description, default_datastore, default_privileges, vm_
     """ API to create a tenant """
     error_info, vms, not_found_vms = generate_tuple_from_vm_list(vm_list)
     if error_info:
+        not_found_vm_list = ",".join(not_found_vms)
+        logging.warning(error_code.VM_NOT_FOUND.format(not_found_vm_list))
         return error_info, None
     
     error_info, tenant = create_tenant_in_db(
