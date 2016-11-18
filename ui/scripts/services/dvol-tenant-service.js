@@ -105,7 +105,7 @@ define([], function() {
         description: tenant.description,
         default_privileges: tenant.default_privileges
       };
-      DvolVmodlService.createTenant(tenantArgs)
+      return DvolVmodlService.createTenant(tenantArgs)
       .then(function() {
         var vmsArgs = {
           name: tenant.name,
