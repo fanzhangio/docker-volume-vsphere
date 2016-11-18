@@ -118,7 +118,13 @@ define([], function() {
               tenant: tenant,
               editMode: true,
               save: function(newTenant) {
-                DvolTenantService.update(newTenant)
+                //
+                // The vmodl api doesn't currently
+                // support modifyTenant. Perhaps
+                // createTenant will just be used for that.
+                // That's currently what we're doing here.
+                //
+                DvolTenantService.add(newTenant)
                   .then(tenantsGrid.refresh);
               }
             });

@@ -55,15 +55,21 @@ define([], function() {
       return DvolSoapService.request('CreateTenant', argsSOAP);
     };
 
-    this.modifyTenant = function(args) {
-      var argsSOAP = [
-        '<name>' + args.name + '</name>',
-        '<description>' + args.description + '</description>',
-        '<default_datastore>' + args.default_datastore + '</default_datastore>',
-        '<default_privileges>' + args.default_privileges + '</default_privileges>'
-      ].join('');
-      return DvolSoapService.request('ModifyTenant', argsSOAP);
-    };
+    //
+    // Not yet supported
+    // TODO: check to see if this will be supported
+    // and either uncomment this or remove this
+    //
+
+    // this.modifyTenant = function(args) {
+    //   var argsSOAP = [
+    //     '<name>' + args.name + '</name>',
+    //     '<description>' + args.description + '</description>',
+    //     '<default_datastore>' + args.default_datastore + '</default_datastore>',
+    //     '<default_privileges>' + args.default_privileges + '</default_privileges>'
+    //   ].join('');
+    //   return DvolSoapService.request('ModifyTenant', argsSOAP);
+    // };
 
     this.removeTenant = function(args) {
       var argsSOAP = [
