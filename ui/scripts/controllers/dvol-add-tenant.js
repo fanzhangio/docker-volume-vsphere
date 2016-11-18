@@ -18,7 +18,7 @@ define([], function() {
 
     var grid = DvolVmGridService.makeVmsGrid('availableVmsGrid', [], null, 'MULTI', false);
 
-    $scope.vmsGrid = grid.grid;
+    $scope.availabeVmsGrid = grid.grid;
 
     var vmSearchOptions = {
       filters: [

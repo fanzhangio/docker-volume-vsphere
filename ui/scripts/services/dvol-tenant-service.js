@@ -86,20 +86,36 @@ define([], function() {
     // DvolVmodlService.addVMsToTenant
     //
     function add(tenant, vms) {
-      var d = $q.defer();
-      setTimeout(function() {
-        tenant.id = generateId();
-        tenant.vms = (vms || []).map(function(vm) {
-          return vm.id;
-        });
-        tenant.datastores = {};
-        var tenants = JSON.parse(localStorage.getItem('tenants')) || [];
-        tenants.push(tenant);
-        localStorage.setItem('tenants', JSON.stringify(tenants));
-        d.resolve(tenants);
-        setState(tenants);
-      }, 200);
-      return d.promise;
+      // var d = $q.defer();
+      // setTimeout(function() {
+      //   tenant.id = generateId();
+      //   tenant.vms = (vms || []).map(function(vm) {
+      //     return vm.id;
+      //   });
+      //   tenant.datastores = {};
+      //   var tenants = JSON.parse(localStorage.getItem('tenants')) || [];
+      //   tenants.push(tenant);
+      //   localStorage.setItem('tenants', JSON.stringify(tenants));
+      //   d.resolve(tenants);
+      //   setState(tenants);
+      // }, 200);
+      // return d.promise;
+      var tenantArgs = {
+        name: tenant.name,
+        description: tenant.description,
+        default_privileges: tenant.default_privileges
+      };
+      DvolVmodlService.createTenant(tenantArgs)
+      .then(function() {
+        var vmsArgs = {
+          name: tenant.name,
+          vms: vms
+        };
+        return DvolVmodlService.addVMsToTenant(vmsArgs);
+      })
+      .then(function() {
+        return tenant;
+      });
     }
 
     //
@@ -306,23 +322,23 @@ define([], function() {
     // ??? This is missing in API
     //
     function update(newlyEditedTenant) {
-      var d = $q.defer();
-      setTimeout(function() {
-        var tenants = JSON.parse(localStorage.getItem('tenants')) || [];
-        var matches = tenants.filter(function(t) {
-          return t.id === newlyEditedTenant.id;
-        });
-        if (matches.length !== 1) return;  // needs async error handling
-        var tenant = matches[0];
-        if (!tenant) return; // needs async error handling
-        dedupe(Object.keys(tenant).concat(Object.keys(newlyEditedTenant))).forEach(function(k) {
-          tenant[k] = newlyEditedTenant.hasOwnProperty(k) ? newlyEditedTenant[k] : tenant[k];
-        });
-        localStorage.setItem('tenants', JSON.stringify(tenants));
-        d.resolve(tenant);
-        setState(tenants);
-      }, 200);
-      return d.promise;
+      // var d = $q.defer();
+      // setTimeout(function() {
+      //   var tenants = JSON.parse(localStorage.getItem('tenants')) || [];
+      //   var matches = tenants.filter(function(t) {
+      //     return t.id === newlyEditedTenant.id;
+      //   });
+      //   if (matches.length !== 1) return;  // needs async error handling
+      //   var tenant = matches[0];
+      //   if (!tenant) return; // needs async error handling
+      //   dedupe(Object.keys(tenant).concat(Object.keys(newlyEditedTenant))).forEach(function(k) {
+      //     tenant[k] = newlyEditedTenant.hasOwnProperty(k) ? newlyEditedTenant[k] : tenant[k];
+      //   });
+      //   localStorage.setItem('tenants', JSON.stringify(tenants));
+      //   d.resolve(tenant);
+      //   setState(tenants);
+      // }, 200);
+      // return d.promise;
     }
 
     // "state"

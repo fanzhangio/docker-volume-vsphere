@@ -55,6 +55,16 @@ define([], function() {
       return DvolSoapService.request('CreateTenant', argsSOAP);
     };
 
+    this.modifyTenant = function(args) {
+      var argsSOAP = [
+        '<name>' + args.name + '</name>',
+        '<description>' + args.description + '</description>',
+        '<default_datastore>' + args.default_datastore + '</default_datastore>',
+        '<default_privileges>' + args.default_privileges + '</default_privileges>'
+      ].join('');
+      return DvolSoapService.request('ModifyTenant', argsSOAP);
+    };
+
     this.removeTenant = function(args) {
       var argsSOAP = [
         '<name>' + args.name + '</name>'
