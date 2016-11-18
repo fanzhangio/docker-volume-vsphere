@@ -186,7 +186,7 @@ define([], function() {
         editAction.enabled = true;
         removeAction.enabled = true;
       }
-      if (newVal !== oldVal) {
+      if (newVal !== oldVal && $scope.tenantsGrid.selectedItems.length > 0) {
         $rootScope.vmsGrid && $rootScope.vmsGrid.refresh();
         $rootScope.datastoresGrid && $rootScope.datastoresGrid.refresh();
       }
