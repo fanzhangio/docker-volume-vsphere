@@ -24,8 +24,10 @@ import vmdk_ops
 import logging
 import auth_data_const
 import error_code
+import time
 
 AUTH_DB_PATH = '/etc/vmware/vmdkops/auth-db'
+has_migrate_auth_db = False
 
 def all_columns_set(privileges):
         if not privileges:
@@ -308,6 +310,22 @@ class AuthorizationDataManager:
 
         """
         return AUTH_DB_PATH
+    
+    def need_migrate_auth_db(self):
+        # Currently, just return True
+        # late we need to check the version 
+        # of the existing auth DB file to decide
+        # whether migrate is needed
+        return True
+    
+    def migrate_auth_db(self):
+        # currently, just remove the existing DB file
+        logging.debug("migrate_auth_db")
+        logging.debug("auth DB %s exist, try to remove the file", AUTH_DB_PATH)
+        os.remove(AUTH_DB_PATH)
+        # insert some delay 
+        time.sleep(60)
+
 
     def connect(self):
         """ Connect to a sqlite database file given by `db_path`. 
@@ -319,6 +337,14 @@ class AuthorizationDataManager:
         Raises a ConnectionFailed exception when connect fails.
 
         """
+        global has_migrate_auth_db
+
+        if os.path.isfile(self.db_path):
+            # already exist
+            if not has_migrate_auth_db and self.need_migrate_auth_db():
+                self.migrate_auth_db()
+                has_migrate_auth_db = True
+
         need_create_table = False
 
         if not os.path.isfile(self.db_path):
@@ -334,6 +360,7 @@ class AuthorizationDataManager:
         # Return rows as Row instances instead of tuples
         self.conn.row_factory = sqlite3.Row
         
+        logging.debug("connect, need_create_table=%d", need_create_table)    
         if need_create_table:
             self.create_tables()
 

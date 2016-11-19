@@ -51,6 +51,8 @@ config = {
 # will do creation/deletion in this folder:
 global path
 
+need_remove_auth_db = True
+
 class VolumeNamingTestCase(unittest.TestCase):
     """Unit test for operations with volume names (volume@datastore)"""
 
@@ -689,7 +691,6 @@ class VmdkTenantTestCase(unittest.TestCase):
     def setUp(self):
         """ Setup run before each test """
         logging.info("VMDKTenantTest setUp path =%s", path)
-        
         if (not self.datastore_name):
             datastores = vmdk_utils.get_datastores()
             if datastores:
