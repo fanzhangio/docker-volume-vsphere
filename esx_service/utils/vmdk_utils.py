@@ -246,9 +246,7 @@ def get_vm_config_path(vm_name):
     datastore, path = config_path.split()
     datastore = datastore[1:-1]
     datastore_path = os.path.join("/vmfs/volumes/", datastore)
-    # datastore_path has the format like this /vmfs/volumes/57302fae-961b9cf9-2e49-000c29acb565/dockvols
-    # remove /dockvols from the datastore_path
-    datastore_path = datastore_path[:-9]
+    # datastore_path has the format like this /vmfs/volumes/datastore_name
     vm_config_path = os.path.join(datastore_path, path)
     return vm_config_path
 
