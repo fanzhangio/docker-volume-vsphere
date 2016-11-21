@@ -117,11 +117,9 @@ function deployesx {
     do
         TARGET=root@$ip
         log "Deploying to ESX $TARGET"
-        $SSH $TARGET  rm -f /etc/vmware/vmdkops/log_config.json 
         deployESXPre
         deployESXInstall
         deployESXPost
-
     done
 }
 
