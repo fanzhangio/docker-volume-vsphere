@@ -3,23 +3,56 @@
 define([], function() {
   'use strict';
 
-  function generateId() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      var r = Math.random() * 16 | 0;
-      var v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
-  }
-
   return function($q, DvolVmodlService) {
 
+    var state = {};
+
     //
-    // We might want to have a get action for tenant
-    // As the api stands now, we'd need to run:
+    // Local Application State
+    // -----------------------
     //
-    // DvolVmodlService.listTenants
-    // DvolVmodlService.listDatastoreAccessForTenant
-    // DvolVmodlService.listVMsForTenant
+    // The "state" variable is a representation of the tenants list in memory
+    //
+    // READING from "state"
+    //
+    // it's exposed for read-only use via this service's getState() method returning a copy
+    // it's meant to be available to the rest of the UI
+    // for situations where up-to-date global state isn't required
+    // and/or hasn't been requested (e.g. via the refresh buttons) by the user
+    //
+    // WRITING to "state"
+    //
+    // currently all mutable state for this UI is contained within the Tenant List
+    // so "state" is just a list of tenants (in the form of an object keyed by tenant id)
+    // AND any mutation to application state must go through this service
+    //
+    // "state" is private to this service
+    // it's expected that any function that communicates with the server
+    // will be followed by:
+    // 1) if it's not already present in the server's response,
+    //    the function must obtain the current Tenant List from the server
+    // 2) the function must call setState, passing this current Tenant List (as an array)
+    //    to replace the previous "state" value with the current one
+    //
+    // TODO: refactor this to put the setState
+    //
+
+    function setState(tenantsArr) {
+      var tenantsObj = {};
+      tenantsArr.forEach(function(t) {
+        tenantsObj[t.id] = t;
+      });
+      state.tenants = tenantsObj;
+    }
+
+    function getState() {
+      return _.clone(state);
+    }
+
+
+    //
+    // eventually the VMODL api will support get Tenant by ID
+    // for now we just use getAll
     //
     function get(tenantId) {
       return getAll()
@@ -29,13 +62,10 @@ define([], function() {
       });
     }
 
-    //
-    // DvolVmodlService.listTenants
-    //
     function getAll() {
       return DvolVmodlService.listTenants()
       .then(function(tenants) {
-        tenants.forEach(function(t,i) {
+        tenants.forEach(function(t, i) {
           t.id = t.name;
           // t.vms = t.vms || [];
           // t.datastores = t.datastores || [];
@@ -75,10 +105,6 @@ define([], function() {
       });
     }
 
-    //
-    // DvolVmodlService.createTenant
-    // DvolVmodlService.addVMsToTenant
-    //
     function add(tenant, vms) {
       var tenantArgs = {
         name: tenant.name,
@@ -100,69 +126,37 @@ define([], function() {
       });
     }
 
-    //
-    // DvolVmodlService.removeTenant
-    //
     function remove(tenantId) {
-      var d = $q.defer();
-      setTimeout(function() {
-        var tenants = JSON.parse(localStorage.getItem('tenants')) || [];
-        var newTenants = tenants.filter(function(t) {
-          return t.id !== tenantId;
-        });
-        localStorage.setItem('tenants', JSON.stringify(newTenants));
-        d.resolve(newTenants);
+      DvolVmodlService.removeTenant(tenantId)
+      .then(getAll)
+      .then(function(tenants) {
         setState(tenants);
-      }, 200);
-      return d.promise;
+        return tenants;
+      });
     }
 
-    //
-    // DvolVmodlService.removeDatastoreAccessForTenant
-    //
     function removeDatastore(tenantId, datastoreId) {
-      var d = $q.defer();
-      setTimeout(function() {
-        var tenants = JSON.parse(localStorage.getItem('tenants')) || [];
-        var matches = tenants.filter(function(t) {
-          return t.id === tenantId;
-        });
-        if (!matches.length === 1) return; // handle error
-        var tenant = matches[0];
-        delete tenant.datastores[datastoreId];
-        localStorage.setItem('tenants', JSON.stringify(tenants));
-        d.resolve();
+      return DvolVmodlService.removeDatastoreAccessForTenant(tenantId, datastoreId)
+      .then(getAll)
+      .then(function(tenants) {
         setState(tenants);
-      }, 200);
-      return d.promise;
+        return getState()[tenantId];
+      });
     }
 
     //
-    // DvolVmodlService.removeVMsFromTenant
+    // NOTE: the VMODL api supports removing multiple VMs in same call
+    // Our original removeVm implementation supports only one,
+    // so we just call the api with a single vm
+    // and not take advantage of the multiple vm option for now
     //
-    // NOTE: decide if we want to support multiple VMs at same time
-    // as it is now, we would just call the api with a single vm
-    // and not take advantage of the multiple vm option
-    //
-    function removeVm(tenantId, removeThisId) {
-      var d = $q.defer();
-      setTimeout(function() {
-        var tenants = JSON.parse(localStorage.getItem('tenants')) || [];
-        var matches = tenants.filter(function(t) {
-          return t.id === tenantId;
-        });
-        if (!matches.length === 1) return; // handle error
-        var tenant = matches[0];
-        if (!tenant.vms || tenant.vms.length < 1) return; // handle error
-        var newAssocs = tenant.vms.filter(function(assocId) {
-          return assocId !== removeThisId;
-        });
-        tenant.vms = newAssocs;
-        localStorage.setItem('tenants', JSON.stringify(tenants));
-        d.resolve(tenant);
+    function removeVm(tenantId, vmId) {
+      return DvolVmodlService.removeVMsFromTenant(tenantId, [vmId])
+      .then(getAll)
+      .then(function(tenants) {
         setState(tenants);
-      }, 200);
-      return d.promise;
+        return getState()[tenantId];
+      });
     }
 
     function dedupe(a) {
@@ -185,9 +179,6 @@ define([], function() {
       return tenant;
     }
 
-    //
-    // DvolVmodlService.addVMsToTenant
-    //
     function addVms(tenantId, vmIds) {
       return DvolVmodlService.addVMsToTenant({
         name: tenantId,
@@ -216,9 +207,7 @@ define([], function() {
         return perms[r + '_volumes'];
       });
     }
-    //
-    // DvolVmodlService.addDatastoreAccessForTenant
-    //
+
     function addDatastore(tenantId, datastore) {
       return DvolVmodlService.addDatastoreAccessForTenant({
         name: tenantId,
@@ -243,9 +232,6 @@ define([], function() {
       });
     }
 
-    //
-    // DvolVmodlService.modifyDatastoreAccessForTenant
-    //
     function updateDatastore(tenantId, updatedDatastore) {
       var add_rights = [];
       var remove_rights = [];
@@ -278,90 +264,6 @@ define([], function() {
         setState(tenants);
         return tenant;
       });
-
-
-
-
-
-      var d = $q.defer();
-      setTimeout(function() {
-        var tenants = JSON.parse(localStorage.getItem('tenants')) || [];
-        var matches = tenants.filter(function(t) {
-          return t.id === tenantId;
-        });
-        if (matches.length !== 1) return;  // needs async error handling
-        var tenant = matches[0];
-        if (!tenant) return; // needs async error handling
-        tenant.datastores[newlyEditedDatastore.datastore] = newlyEditedDatastore;
-        localStorage.setItem('tenants', JSON.stringify(tenants));
-        d.resolve(tenant);
-        setState(tenants);
-      }, 200);
-      return d.promise;
-    }
-
-    //
-    // ??? This is missing in API
-    //
-    function update(newlyEditedTenant) {
-      // var d = $q.defer();
-      // setTimeout(function() {
-      //   var tenants = JSON.parse(localStorage.getItem('tenants')) || [];
-      //   var matches = tenants.filter(function(t) {
-      //     return t.id === newlyEditedTenant.id;
-      //   });
-      //   if (matches.length !== 1) return;  // needs async error handling
-      //   var tenant = matches[0];
-      //   if (!tenant) return; // needs async error handling
-      //   dedupe(Object.keys(tenant).concat(Object.keys(newlyEditedTenant))).forEach(function(k) {
-      //     tenant[k] = newlyEditedTenant.hasOwnProperty(k) ? newlyEditedTenant[k] : tenant[k];
-      //   });
-      //   localStorage.setItem('tenants', JSON.stringify(tenants));
-      //   d.resolve(tenant);
-      //   setState(tenants);
-      // }, 200);
-      // return d.promise;
-    }
-
-    // "state"
-    // -----
-    //
-    // READING from "state"
-    //
-    // "state" is a representation of the tenants objects in memory
-    // it's exposed for read-only use via this service's getState() method returning a copy
-    // it's meant to be available to the rest of the UI
-    // for situations where up-to-date global state isn't required
-    // and/or hasn't been requested (e.g. via the refresh buttons) by the user
-    //
-    // WRITING to "state"
-    //
-    // currently all mutable state for this UI is contained within the Tenant List
-    // so "state" is just a list of tenants (in the form of an object keyed by tenant id)
-    // AND any mutation to application state must go through this service
-    //
-    // "state" is private to this service
-    // it's expected that any function that communicates with the server
-    // will be followed by:
-    // 1) if it's not already present in the server's response,
-    //    the function must obtain the current Tenant List from the server
-    // 2) the function must call setState, passing this current Tenant List (as an array)
-    //    to replace the previous "state" value with the current one
-    //
-    // TODO: refactor this to put the setState call at a lower level
-    //
-
-    var state = {};
-    function setState(tenantsArr) {
-      var tenantsObj = {};
-      tenantsArr.forEach(function(t) {
-        tenantsObj[t.id] = t;
-      });
-      state.tenants = tenantsObj;
-    }
-
-    function getState() {
-      return _.clone(state);
     }
 
     this.getAll = getAll;
@@ -373,7 +275,6 @@ define([], function() {
     this.addVms = addVms;
     this.addDatastore = addDatastore;
     this.updateDatastore = updateDatastore;
-    this.update = update;
     this.getState = getState;
 
   };
